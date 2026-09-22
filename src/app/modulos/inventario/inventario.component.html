@@ -1,0 +1,137 @@
+<!-- ============================================= -->
+<!-- Template de Inventario - Control de stock de productos -->
+<!-- ============================================= -->
+<section id="section-inventario" class="app-module active" aria-label="Control de Inventario">
+
+  <!-- Encabezado de la pagina -->
+  <header class="page-header mb-4">
+    <nav class="breadcrumb-nav d-flex align-items-center gap-2 small text-muted mb-2">
+      <i class="bi bi-house-door-fill text-brand"></i> Inicio
+      <i class="bi bi-chevron-right" style="font-size: 0.7rem;"></i>
+      <span class="fw-medium text-dark">Inventario</span>
+    </nav>
+    <h2 class="page-title mb-1">Control de Inventario</h2>
+    <p class="page-subtitle mb-0">Consulta y actualiza el nivel de stock de cada producto del restaurante.</p>
+  </header>
+
+  <!-- Barra de herramientas con buscador -->
+  <div class="page-toolbar d-flex align-items-center gap-2 mb-4 flex-wrap">
+    <div class="input-group input-group-sm" style="max-width: 280px;">
+      <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+      <input type="text" class="form-control form-control-custom border-start-0" placeholder="Buscar producto o categoría..."
+        [(ngModel)]="busqueda" (ngModelChange)="onBusqueda()">
+    </div>
+    <button (click)="cargarInventario()" class="btn btn-light border rounded-pill p-2 d-flex align-items-center justify-content-center shadow-sm" style="width: 38px; height: 38px;" title="Sincronizar">
+      <i class="bi bi-arrow-clockwise fs-5"></i>
+    </button>
+  </div>
+
+  <!-- Card principal con la tabla de inventario -->
+  <div class="app-card shadow-sm">
+    <div class="app-card-header d-flex justify-content-between align-items-center">
+      <h5 class="mb-0"><i class="bi bi-box-seam text-brand me-2"></i>Stock de Productos</h5>
+      @if (inventarioFiltrado.length > 0) {
+        <span class="badge rounded-pill bg-light text-dark border px-3 py-2 small fw-semibold">{{ inventarioFiltrado.length }} productos</span>
+      }
+    </div>
+
+    @if (cargando) {
+      <div class="app-loading-state py-5 text-center bg-white">
+        <div class="spinner-border text-brand" role="status">
+          <span class="visually-hidden">Cargando...</span>
+        </div>
+        <p class="text-muted small mt-2 mb-0">Cargando inventario...</p>
+      </div>
+    } @else {
+      <div class="app-table-wrap">
+        <table class="table align-middle table-hover mb-0">
+          <thead>
+            <tr>
+              <th class="ps-4" style="width: 30%;">Producto</th>
+              <th style="width: 25%;">Categoría</th>
+              <th style="width: 20%;">Stock Actual</th>
+              <th class="text-center pe-4" style="width: 25%;">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of inventarioPaginado; track item.id_producto) {
+            <tr>
+              <td class="ps-4">
+                <div class="d-flex align-items-center gap-3">
+                  <div class="avatar-sample d-flex align-items-center justify-content-center rounded-3 bg-light fs-4 shadow-sm"
+                    style="width: 40px; height: 40px; flex-shrink: 0;">
+                    <i class="bi bi-box-seam text-brand"></i>
+                  </div>
+                  <span class="fw-bold text-dark fs-6">{{ item.nombre }}</span>
+                </div>
+              </td>
+              <td>
+                <span class="text-secondary fw-semibold small bg-light px-2.5 py-1 rounded">{{ item.nombre_categoria || 'General' }}</span>
+              </td>
+              <td>
+                @if (editandoId === item.id_producto) {
+                  <!-- Modo edicion: input inline para cambiar stock -->
+                  <div class="d-flex align-items-center gap-2">
+                    <input type="number" class="form-control form-control-custom form-control-sm" style="max-width: 100px;"
+                      [(ngModel)]="stockEditado" min="0" (keyup.enter)="guardarStock(item.id_producto)" (keyup.escape)="cancelarEdicion()" autofocus>
+                    <button class="btn btn-sm btn-success rounded-pill px-2" (click)="guardarStock(item.id_producto)" title="Guardar">
+                      <i class="bi bi-check-lg"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary rounded-pill px-2" (click)="cancelarEdicion()" title="Cancelar">
+                      <i class="bi bi-x-lg"></i>
+                    </button>
+                  </div>
+                } @else {
+                  <!-- Modo lectura: muestra el stock actual -->
+                  <span class="badge rounded-pill px-3 py-2 fw-semibold small {{ getBadgeStock(item.stock) }}">
+                    <i class="bi bi-box-seam me-1"></i> {{ item.stock || 0 }} unidades
+                  </span>
+                }
+              </td>
+              <td class="text-center pe-4">
+                @if (editandoId !== item.id_producto) {
+                  <button class="btn-action shadow-sm" (click)="iniciarEdicion(item)" title="Editar stock">
+                    <i class="bi bi-pencil-square"></i>
+                  </button>
+                }
+              </td>
+            </tr>
+            } @empty {
+            <tr>
+              <td colspan="4">
+                <div class="app-loading-state py-5 text-center bg-white">
+                  <i class="bi bi-box-seam text-muted opacity-50 mb-2" style="font-size: 2.5rem;"></i>
+                  <h6 class="mb-1 text-dark fw-bold fs-5">Sin productos en inventario</h6>
+                  <p class="text-secondary small mb-0">No se encontraron productos para mostrar.</p>
+                </div>
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      @if (inventarioFiltrado.length > 0) {
+      <div class="card-footer bg-white border-top py-3 px-4 d-flex flex-wrap align-items-center justify-content-between gap-2">
+        <span class="small text-secondary fw-medium">Mostrando {{ inventarioPaginado.length }} de {{ inventarioFiltrado.length }} productos</span>
+        <nav aria-label="Paginación de inventario">
+          <ul class="pagination pagination-sm mb-0 rounded-2">
+            <li class="page-item" [class.disabled]="paginaActual === 1">
+              <a class="page-link px-2.5 py-1.5" (click)="cambiarPagina(paginaActual - 1); $event.preventDefault()" href="#">&#8249;</a>
+            </li>
+            @for (p of paginasArray; track p) {
+              <li class="page-item" [class.active]="paginaActual === p">
+                <a class="page-link px-3 py-1.5" [class.bg-brand]="paginaActual === p"
+                  (click)="cambiarPagina(p); $event.preventDefault()" href="#">{{ p }}</a>
+              </li>
+            }
+            <li class="page-item" [class.disabled]="paginaActual === totalPaginas || totalPaginas === 0">
+              <a class="page-link px-2.5 py-1.5" (click)="cambiarPagina(paginaActual + 1); $event.preventDefault()" href="#">&#8250;</a>
+            </li>
+          </ul>
+        </nav>
+      </div>
+      }
+    }
+  </div>
+</section>

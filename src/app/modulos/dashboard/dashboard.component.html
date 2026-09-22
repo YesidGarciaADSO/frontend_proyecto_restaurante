@@ -1,0 +1,106 @@
+<!-- Dashboard simplificado - 4 cards de KPIs + tabla de ultimos pedidos -->
+
+<section class="app-module" aria-label="Dashboard">
+  <header class="page-header mb-4">
+    <nav class="breadcrumb-nav d-flex align-items-center gap-2 small text-muted mb-2">
+      <i class="bi bi-house-door-fill text-brand"></i> Inicio
+      <i class="bi bi-chevron-right" style="font-size: 0.7rem;"></i>
+      <span class="fw-medium text-dark">Dashboard</span>
+    </nav>
+    <h2 class="page-title mb-1">Dashboard</h2>
+    <p class="text-secondary mb-0" style="font-size: 0.9rem;">Resumen general del restaurante</p>
+  </header>
+
+  <!-- Tarjetas de estadisticas -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-3">
+      <div class="stat-card stat-red">
+        <div class="stat-icon"><i class="bi bi-currency-dollar"></i></div>
+        <div class="stat-value">${{ totalVentas | number:'1.0-0' }}</div>
+        <div class="stat-label">Total Ventas</div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="stat-card stat-yellow">
+        <div class="stat-icon"><i class="bi bi-receipt"></i></div>
+        <div class="stat-value">{{ totalPedidos }}</div>
+        <div class="stat-label">Total Pedidos</div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="stat-card stat-orange">
+        <div class="stat-icon"><i class="bi bi-people"></i></div>
+        <div class="stat-value">{{ totalClientes }}</div>
+        <div class="stat-label">Total Clientes</div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="stat-card stat-green">
+        <div class="stat-icon"><i class="bi bi-check-circle"></i></div>
+        <div class="stat-value">{{ pedidosRecientes.length }}</div>
+        <div class="stat-label">Ultimos Pedidos</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla de ultimos pedidos -->
+  <div class="app-card shadow-sm">
+    <div class="app-card-header">
+      <h5><i class="bi bi-receipt text-brand me-2"></i>Ultimos Pedidos</h5>
+    </div>
+    <div class="app-table-wrap">
+      <table class="table align-middle table-hover mb-0">
+        <thead>
+          <tr>
+            <th class="ps-4"># Pedido</th>
+            <th>Cliente</th>
+            <th>Tipo</th>
+            <th>Total</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (ped of pedidosRecientes; track ped.id_pedido) {
+            <tr>
+              <td class="ps-4 fw-bold text-brand">#{{ ped.id_pedido }}</td>
+              <td class="fw-medium text-dark">{{ ped.nombre_cliente || 'Cliente General' }}</td>
+              <td>
+                @if (ped.tipo === 'domicilio') {
+                  <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2 py-1 rounded-pill fw-semibold small">
+                    <i class="bi bi-bicycle me-1"></i> Domicilio
+                  </span>
+                } @else {
+                  <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2 py-1 rounded-pill fw-semibold small">
+                    <i class="bi bi-shop me-1"></i> Local
+                  </span>
+                }
+              </td>
+              <td class="fw-bold text-dark">${{ (ped.total || 0) | number:'1.0-0' }}</td>
+              <td>
+                <span class="badge rounded-pill px-2 py-1 fw-bold text-capitalize border"
+                  [ngClass]="{
+                    'bg-danger-subtle text-danger border-danger-subtle': ped.estado === 'pendiente',
+                    'bg-primary-subtle text-primary border-primary-subtle': ped.estado === 'en_preparacion',
+                    'bg-warning-subtle text-warning border-warning-subtle': ped.estado === 'en_camino',
+                    'bg-success-subtle text-success border-success-subtle': ped.estado === 'entregado',
+                    'bg-light text-muted border-secondary-subtle': ped.estado === 'cancelado'
+                  }">
+                  {{ ped.estado?.replace('_', ' ') || 'Sin Estado' }}
+                </span>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="5" class="text-center py-5">
+                <div class="text-muted d-flex flex-column align-items-center gap-2">
+                  <i class="bi bi-receipt text-secondary opacity-50" style="font-size: 2.5rem;"></i>
+                  <p class="mb-0 fw-medium">No hay pedidos recientes.</p>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>

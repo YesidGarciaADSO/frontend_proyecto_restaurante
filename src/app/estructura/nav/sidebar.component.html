@@ -1,0 +1,103 @@
+<!-- sidebar menu -->
+
+<aside class="sidebar sidebar-custom bg-dark text-white d-flex flex-column" [class.open]="sidebar.isOpen()">
+
+  <!-- logo -->
+  <div class="p-4 border-bottom border-secondary border-opacity-25">
+    <div class="d-flex align-items-center gap-3">
+      <span class="d-flex align-items-center justify-content-center rounded-3 bg-white text-warning shadow-sm"
+        style="width: 40px; height: 40px; flex-shrink: 0;">
+        <i class="bi bi-shop fs-5"></i>
+      </span>
+      <div>
+        <div class="fw-bold fs-5 text-white">Restaurante</div>
+        <small class="text-warning text-uppercase fw-bold" style="font-size: 0.7rem;">Panel Administrativo</small>
+      </div>
+    </div>
+  </div>
+
+  <!-- menu -->
+  <nav class="nav nav-pills flex-column gap-1 p-3 flex-grow-1">
+
+    <span class="small text-uppercase text-white fw-bold px-2 mb-1 mt-2" style="font-size: 0.75rem;">Operaciones</span>
+
+    <a class="nav-link d-flex align-items-center gap-2.5 px-3 py-2 rounded-3 sidebar-item"
+      routerLink="/dashboard" routerLinkActive="active-brand text-white fw-semibold"
+      [routerLinkActiveOptions]="{ exact: true }" (click)="close()">
+      <i class="bi bi-speedometer2 fs-5 me-2"></i> Dashboard
+    </a>
+
+    <a class="nav-link d-flex align-items-center gap-2.5 px-3 py-2 rounded-3 sidebar-item"
+      routerLink="/pedidos" routerLinkActive="active-brand text-white fw-semibold" (click)="close()">
+      <i class="bi bi-receipt fs-5 me-2"></i> Pedidos
+    </a>
+
+    <a class="nav-link d-flex align-items-center gap-2.5 px-3 py-2 rounded-3 sidebar-item"
+      routerLink="/clientes" routerLinkActive="active-brand text-white fw-semibold" (click)="close()">
+      <i class="bi bi-people fs-5 me-2"></i> Clientes
+    </a>
+
+    <span class="small text-uppercase text-white fw-bold px-2 mb-1 mt-4" style="font-size: 0.75rem;">Catalogo</span>
+
+    <a class="nav-link d-flex align-items-center gap-2.5 px-3 py-2 rounded-3 sidebar-item"
+      routerLink="/productos" routerLinkActive="active-brand text-white fw-semibold" (click)="close()">
+      <i class="bi bi-box-seam fs-5 me-2"></i> Productos
+    </a>
+
+    <a class="nav-link d-flex align-items-center gap-2.5 px-3 py-2 rounded-3 sidebar-item"
+      routerLink="/categorias" routerLinkActive="active-brand text-white fw-semibold" (click)="close()">
+      <i class="bi bi-grid-fill fs-5 me-2"></i> Categorias
+    </a>
+
+    <a class="nav-link d-flex align-items-center gap-2.5 px-3 py-2 rounded-3 sidebar-item"
+      routerLink="/proveedores" routerLinkActive="active-brand text-white fw-semibold" (click)="close()">
+      <i class="bi bi-truck fs-5 me-2"></i> Proveedores
+    </a>
+
+    <a class="nav-link d-flex align-items-center gap-2.5 px-3 py-2 rounded-3 sidebar-item"
+      routerLink="/inventario" routerLinkActive="active-brand text-white fw-semibold" (click)="close()">
+      <i class="bi bi-clipboard-data fs-5 me-2"></i> Inventario
+    </a>
+
+    <span class="small text-uppercase text-white fw-bold px-2 mb-1 mt-4" style="font-size: 0.75rem;">Operaciones</span>
+
+    <a class="nav-link d-flex align-items-center gap-2.5 px-3 py-2 rounded-3 sidebar-item"
+      routerLink="/ventas" routerLinkActive="active-brand text-white fw-semibold" (click)="close()">
+      <i class="bi bi-graph-up-arrow fs-5 me-2"></i> Ventas
+    </a>
+
+    <a class="nav-link d-flex align-items-center gap-2.5 px-3 py-2 rounded-3 sidebar-item"
+      routerLink="/domiciliario" routerLinkActive="active-brand text-white fw-semibold" (click)="close()">
+      <i class="bi bi-compass fs-5 me-2"></i> Reparto
+    </a>
+
+    <a class="nav-link d-flex align-items-center gap-2.5 px-3 py-2 rounded-3 sidebar-item"
+      routerLink="/pagos" routerLinkActive="active-brand text-white fw-semibold" (click)="close()">
+      <i class="bi bi-wallet2 fs-5 me-2"></i> Pagos
+    </a>
+
+    <span class="small text-uppercase text-white fw-bold px-2 mb-1 mt-4" style="font-size: 0.75rem;">Sistema</span>
+
+    <a class="nav-link d-flex align-items-center gap-2.5 px-3 py-2 rounded-3 sidebar-item"
+      routerLink="/usuarios" routerLinkActive="active-brand text-white fw-semibold" (click)="close()">
+      <i class="bi bi-person-badge-fill fs-5 me-2"></i> Usuarios
+    </a>
+
+    <a class="nav-link d-flex align-items-center gap-2.5 px-3 py-2 rounded-3 sidebar-item"
+      routerLink="/ajustes" routerLinkActive="active-brand text-white fw-semibold" (click)="close()">
+      <i class="bi bi-gear-fill fs-5 me-2"></i> Ajustes
+    </a>
+  </nav>
+
+  <!-- cerrar sesion -->
+  <div class="p-3 border-top border-secondary border-opacity-25">
+    <button type="button"
+      class="btn btn-link nav-link d-flex align-items-center gap-2.5 w-100 px-3 py-2 rounded-3 text-start"
+      style="background-color: white;" (click)="logout()">
+      <i class="bi bi-box-arrow-left fs-5 text-brand me-2"></i>
+      <span class="fw-medium text-brand">Cerrar Sesion</span>
+    </button>
+  </div>
+</aside>
+
+<div class="sidebar-overlay" [class.show]="sidebar.isOpen()" (click)="close()"></div>

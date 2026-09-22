@@ -1,0 +1,297 @@
+<section id="section-pedidos" class="app-module animate-fade-in" aria-label="Gestión de pedidos">
+
+  <header class="page-header mb-4">
+    <nav class="breadcrumb-nav d-flex align-items-center gap-2 small text-muted mb-2">
+      <i class="bi bi-house-door-fill text-brand"></i> Inicio
+      <i class="bi bi-chevron-right" style="font-size: 0.7rem;"></i>
+      <span class="fw-medium text-dark">Pedidos</span>
+    </nav>
+    <h2 class="page-title mb-1">Gestión de Pedidos</h2>
+    <p class="text-secondary mb-0" style="font-size: 0.9rem;">Administra pedidos locales y domicilios, haz seguimiento en tiempo real</p>
+  </header>
+
+  <div class="page-toolbar mb-4 d-flex align-items-center justify-content-end gap-3 flex-wrap">
+    <select class="form-select form-control-custom" style="width: auto; min-width: 180px;"
+      [(ngModel)]="filtroEstado" (ngModelChange)="cambiarFiltro()">
+      <option value="todos">Todos</option>
+      <option value="pendiente">Pendientes</option>
+      <option value="en_preparacion">En Cocina</option>
+      <option value="en_camino">En Camino</option>
+      <option value="entregado">Entregados</option>
+      <option value="cancelado">Cancelados</option>
+    </select>
+
+    <button class="btn btn-brand px-3 py-1 rounded-pill fw-bold shadow-sm d-flex align-items-center gap-2"
+      (click)="nuevoPedido()">
+      <i class="bi bi-plus-circle fs-5"></i> Nuevo Pedido
+    </button>
+  </div>
+
+  <div class="card border-0 shadow-sm rounded-3 overflow-hidden border">
+    <div class="app-card-header">
+      <h5><i class="bi bi-receipt text-brand me-2"></i> Listado de Pedidos</h5>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0" aria-label="Listado de pedidos">
+        <thead class="table-light text-secondary uppercase fw-bold" style="font-size: 0.75rem; letter-spacing: 0.5px;">
+          <tr>
+            <th class="ps-4"># Pedido</th>
+            <th>Cliente</th>
+            <th>Tipo</th>
+            <th>Total</th>
+            <th>Estado</th>
+            <th class="pe-4 text-end">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (ped of pedidosPaginados; track ped.id_pedido) {
+            <tr class="transition-all">
+              <td class="ps-4 fw-bold text-brand fw-mono">#{{ ped.id_pedido | number:'3.0-0' }}</td>
+              <td class="fw-medium text-dark">
+                <span class="d-flex align-items-center gap-2">
+                  <i class="bi bi-person text-secondary opacity-75"></i> {{ ped.nombre_cliente }}
+                </span>
+              </td>
+              <td>
+                @if (ped.tipo === 'domicilio') {
+                  <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2.5 py-1 rounded-pill fw-semibold small">
+                    <i class="bi bi-bicycle me-1"></i> Domicilio
+                  </span>
+                } @else {
+                  <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2.5 py-1 rounded-pill fw-semibold small">
+                    <i class="bi bi-shop me-1"></i> Local
+                  </span>
+                }
+              </td>
+              <td class="fw-bold text-dark fw-mono">${{ (ped.total || 0) | number:'1.0-0' }}</td>
+              <td>
+                <span class="badge rounded-pill px-2.5 py-1.5 fw-bold text-capitalize border d-inline-flex align-items-center gap-1"
+                  [ngClass]="{
+                    'bg-danger-subtle text-danger border-danger-subtle': ped.estado?.toLowerCase() === 'pendiente',
+                    'bg-primary-subtle text-primary border-primary-subtle': ped.estado?.toLowerCase() === 'en_preparacion' || ped.estado?.toLowerCase() === 'confirmado',
+                    'bg-warning-subtle text-warning border-warning-subtle': ped.estado?.toLowerCase() === 'en_camino',
+                    'bg-success-subtle text-success border-success-subtle': ped.estado?.toLowerCase() === 'entregado',
+                    'bg-light text-muted border-secondary-subtle': ped.estado?.toLowerCase() === 'cancelado'
+                  }">
+                  <span style="width: 6px; height: 6px; border-radius: 50%; display: inline-block;" [ngClass]="{
+                    'bg-danger': ped.estado?.toLowerCase() === 'pendiente',
+                    'bg-primary': ped.estado?.toLowerCase() === 'en_preparacion' || ped.estado?.toLowerCase() === 'confirmado',
+                    'bg-warning': ped.estado?.toLowerCase() === 'en_camino',
+                    'bg-success': ped.estado?.toLowerCase() === 'entregado',
+                    'bg-secondary': ped.estado?.toLowerCase() === 'cancelado'
+                  }"></span>
+                  {{ ped.estado?.toLowerCase()?.replace('_', ' ') || 'Sin Estado' }}
+                </span>
+              </td>
+              <td class="pe-4 text-end">
+                <div class="d-inline-flex gap-1">
+                  @if (ped.estado?.toLowerCase() === 'pendiente') {
+                    <button class="btn-action success" title="Pasar a Cocina" (click)="actualizarEstado(ped.id_pedido, 'en_preparacion')">
+                      <i class="bi bi-play-circle-fill"></i>
+                    </button>
+                  }
+                  @if (ped.estado?.toLowerCase() === 'en_preparacion' || ped.estado?.toLowerCase() === 'confirmado') {
+                    <button class="btn-action" title="Despachar" (click)="actualizarEstado(ped.id_pedido, 'en_camino')">
+                      <i class="bi bi-bicycle"></i>
+                    </button>
+                  }
+                  @if (ped.estado?.toLowerCase() === 'en_camino') {
+                    <button class="btn-action success" title="Entregado" (click)="actualizarEstado(ped.id_pedido, 'entregado')">
+                      <i class="bi bi-check-circle-fill"></i>
+                    </button>
+                  }
+                  @if (ped.estado?.toLowerCase() !== 'cancelado' && ped.estado?.toLowerCase() !== 'entregado') {
+                    <button class="btn-action danger" title="Cancelar" (click)="cancelarPedido(ped.id_pedido)">
+                      <i class="bi bi-x-circle-fill"></i>
+                    </button>
+                  }
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="6" class="text-center py-5 bg-white">
+                <div class="text-muted d-flex flex-column align-items-center justify-content-center gap-2">
+                  <i class="bi bi-receipt text-secondary opacity-50" style="font-size: 2.5rem;"></i>
+                  <p class="mb-0 fw-medium">No se registran pedidos en estado <span class="fw-bold text-dark">"{{ filtroEstado.replace('_', ' ') }}"</span>.</p>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card-footer bg-white border-top py-3 px-4 d-flex flex-wrap align-items-center justify-content-between gap-2">
+      <span class="small text-secondary fw-medium">Mostrando {{ pedidosPaginados.length }} de {{ pedidosFiltrados.length }} pedidos</span>
+      <nav aria-label="Paginación de pedidos">
+        <ul class="pagination pagination-sm mb-0 rounded-2">
+          <li class="page-item" [class.disabled]="paginaActual === 1">
+            <a class="page-link px-2.5 py-1.5" (click)="cambiarPagina(paginaActual - 1); $event.preventDefault()" href="#">&#8249;</a>
+          </li>
+          @for (p of paginasArray; track p) {
+            <li class="page-item" [class.active]="paginaActual === p">
+              <a class="page-link px-3 py-1.5" [class.bg-brand]="paginaActual === p"
+                (click)="cambiarPagina(p); $event.preventDefault()" href="#">{{ p }}</a>
+            </li>
+          }
+          <li class="page-item" [class.disabled]="paginaActual === totalPaginas || totalPaginas === 0">
+            <a class="page-link px-2.5 py-1.5" (click)="cambiarPagina(paginaActual + 1); $event.preventDefault()" href="#">&#8250;</a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+</section>
+
+@if (mostrarModalNuevo) {
+  <div class="modal-backdrop fade show" style="z-index: 1040;" (click)="mostrarModalNuevo = false"></div>
+  <div class="modal fade show d-block" tabindex="-1" style="z-index: 1050;">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content border-0 shadow-lg rounded-3">
+        <div class="modal-header border-bottom bg-light">
+          <h5 class="modal-title fw-bold">
+            <i class="bi bi-plus-circle text-brand me-2"></i>Nuevo Pedido
+          </h5>
+          <button type="button" class="btn-close" (click)="mostrarModalNuevo = false"></button>
+        </div>
+        <div class="modal-body p-4">
+
+          <h6 class="fw-bold text-dark mb-3"><i class="bi bi-person-fill text-brand me-2"></i>Datos del Cliente</h6>
+          <div class="row g-3 mb-4">
+            <div class="col-md-4">
+              <label class="form-label small fw-bold text-secondary">Nombre *</label>
+              <input type="text" class="form-control form-control-custom" placeholder="Ej: Juan Pérez" [(ngModel)]="nuevoCliente">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-bold text-secondary">Teléfono</label>
+              <input type="text" class="form-control form-control-custom" placeholder="Ej: 3001234567" [(ngModel)]="nuevoTelefono">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-bold text-secondary">Tipo de Pedido</label>
+              <select class="form-select form-control-custom" [(ngModel)]="nuevoTipo">
+                <option value="local">Local / Dine-in</option>
+                <option value="domicilio">Domicilio</option>
+              </select>
+            </div>
+          </div>
+
+          @if (nuevoTipo === 'domicilio') {
+            <div class="row g-3 mb-4">
+              <div class="col-md-8">
+                <label class="form-label small fw-bold text-secondary">Dirección de Entrega *</label>
+                <input type="text" class="form-control form-control-custom" placeholder="Ej: Carrera 15 # 12-30" [(ngModel)]="nuevaDireccion">
+              </div>
+              <div class="col-md-4">
+                <label class="form-label small fw-bold text-secondary">Método de Pago</label>
+                <select class="form-select form-control-custom" [(ngModel)]="nuevoMetodoPago">
+                  <option value="Efectivo">Efectivo</option>
+                  <option value="Tarjeta">Tarjeta</option>
+                  <option value="Nequi">Nequi</option>
+                  <option value="Daviplata">Daviplata</option>
+                </select>
+              </div>
+            </div>
+          } @else {
+            <div class="row g-3 mb-4">
+              <div class="col-md-12">
+                <label class="form-label small fw-bold text-secondary">Método de Pago</label>
+                <select class="form-select form-control-custom" [(ngModel)]="nuevoMetodoPago">
+                  <option value="Efectivo">Efectivo</option>
+                  <option value="Tarjeta">Tarjeta</option>
+                  <option value="Nequi">Nequi</option>
+                  <option value="Daviplata">Daviplata</option>
+                </select>
+              </div>
+            </div>
+          }
+
+          <hr class="my-3">
+
+          <h6 class="fw-bold text-dark mb-3"><i class="bi bi-cart-fill text-brand me-2"></i>Agregar Productos</h6>
+          <div class="row g-2 mb-3 align-items-end">
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold text-secondary">Producto</label>
+              <select class="form-select form-control-custom" [(ngModel)]="productoSeleccionado">
+                <option value="">-- Seleccionar producto --</option>
+                @for (prod of listaProductos; track prod.id_producto) {
+                  <option [value]="prod.id_producto">{{ prod.nombre }} - ${{ prod.precio | number:'1.0-0' }}</option>
+                }
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small fw-semibold text-secondary">Cantidad</label>
+              <input type="number" class="form-control form-control-custom" [(ngModel)]="cantidadProducto" min="1" max="99">
+            </div>
+            <div class="col-md-3">
+              <button class="btn btn-brand w-100 rounded-pill fw-bold" (click)="agregarProducto()" [disabled]="!productoSeleccionado">
+                <i class="bi bi-plus-circle me-1"></i> Agregar
+              </button>
+            </div>
+          </div>
+
+          @if (productosPedido.length > 0) {
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th>Producto</th>
+                    <th style="width: 100px;">Precio</th>
+                    <th style="width: 90px;">Cant.</th>
+                    <th style="width: 120px;">Subtotal</th>
+                    <th style="width: 50px;"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (item of productosPedido; track item.id_producto; let i = $index) {
+                    <tr>
+                      <td class="fw-semibold text-dark">{{ item.nombre }}</td>
+                      <td class="text-secondary fw-mono">${{ item.precio | number:'1.0-0' }}</td>
+                      <td>
+                        <input type="number" class="form-control form-control-sm form-control-custom"
+                          [(ngModel)]="item.cantidad" min="1" max="99"
+                          (ngModelChange)="actualizarSubtotal(i)" style="width: 70px;">
+                      </td>
+                      <td class="fw-bold text-success fw-mono">${{ item.subtotal | number:'1.0-0' }}</td>
+                      <td>
+                        <button class="btn btn-sm btn-outline-danger rounded-pill px-2" (click)="eliminarProducto(i)" title="Eliminar">
+                          <i class="bi bi-trash3-fill"></i>
+                        </button>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+
+            <div class="d-flex justify-content-end mt-3">
+              <div class="bg-light rounded-3 px-4 py-3 border">
+                <span class="text-secondary fw-semibold me-3">Total del Pedido:</span>
+                <span class="fw-bold text-success fs-4">${{ totalPedido | number:'1.0-0' }}</span>
+              </div>
+            </div>
+          } @else {
+            <div class="text-center py-4 bg-light rounded-3 border border-dashed">
+              <i class="bi bi-cart-x text-muted opacity-50 mb-2" style="font-size: 2rem;"></i>
+              <p class="text-secondary small mb-0">Agrega productos al pedido usando el formulario de arriba.</p>
+            </div>
+          }
+
+        </div>
+        <div class="modal-footer border-top">
+          <button type="button" class="btn btn-secondary rounded-pill px-3" (click)="mostrarModalNuevo = false">Cancelar</button>
+          <button type="button" class="btn btn-brand rounded-pill px-4 fw-bold"
+            (click)="confirmarNuevoPedido()"
+            [disabled]="!nuevoCliente.trim() || productosPedido.length === 0 || guardandoPedido || (nuevoTipo === 'domicilio' && !nuevaDireccion.trim())">
+            @if (guardandoPedido) {
+              <span class="spinner-border spinner-border-sm me-1" role="status"></span> Creando...
+            } @else {
+              <i class="bi bi-check-circle me-1"></i> Crear Pedido (${{ totalPedido | number:'1.0-0' }})
+            }
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

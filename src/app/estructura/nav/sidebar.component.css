@@ -1,0 +1,21 @@
+/* Estilos del menú lateral */
+
+.sidebar-custom {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background-color: #d62300 !important;
+}
+
+.sidebar-item {
+    color: rgb(221, 219, 219);
+}
+
+.sidebar-item:hover {
+    background: #efc6b08a;
+    color: #ffffff;
+}
+
+.active-brand {
+    background-color: #efc6b08a!important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(255, 102, 54, 0.3);
+}

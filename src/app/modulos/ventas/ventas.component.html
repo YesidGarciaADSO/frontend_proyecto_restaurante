@@ -1,0 +1,131 @@
+<!-- ============================================= -->
+<!-- Template de Ventas - Historial de ventas e ingresos del restaurante -->
+<!-- ============================================= -->
+<section id="section-ventas" class="app-module active" aria-label="Historial de Ventas e Ingresos">
+
+  <!-- Encabezado de la pagina -->
+  <header class="page-header mb-4">
+    <nav class="breadcrumb-nav d-flex align-items-center gap-2 small text-muted mb-2">
+      <i class="bi bi-house-door-fill text-brand"></i> Inicio
+      <i class="bi bi-chevron-right" style="font-size: 0.7rem;"></i>
+      <span class="fw-medium text-dark">Ventas</span>
+    </nav>
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+      <div>
+        <h2 class="page-title mb-1">Historial de Ventas</h2>
+        <p class="page-subtitle mb-0">Audita el registro contable, ingresos consolidados y el flujo de caja de comandas despachadas.</p>
+      </div>
+      <button class="btn btn-brand rounded-pill px-3 py-1 fw-bold shadow-sm d-flex align-items-center gap-2" (click)="cargarHistorialVentas()">
+        <i class="bi bi-arrow-clockwise fs-5"></i> Actualizar Historial
+      </button>
+    </div>
+  </header>
+
+  <!-- Spinner de carga mientras se obtienen los datos -->
+  @if (cargando) {
+    <div class="app-card shadow-sm p-5 text-center bg-white rounded-3">
+      <div class="spinner-border text-brand mb-3" role="status" style="width: 2.5rem; height: 2.5rem;">
+        <span class="visually-hidden">Calculando arqueo...</span>
+      </div>
+      <p class="text-secondary mb-0 fw-medium fs-6">Sincronizando transacciones financieras de la base de datos...</p>
+    </div>
+  } @else {
+
+    <!-- Card principal con la tabla de ventas -->
+    <div class="app-card shadow-sm">
+      <div class="app-card-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <h5 class="mb-0"><i class="bi bi-cash-stack me-2 text-brand"></i>Transacciones Registradas</h5>
+        <div class="d-flex align-items-center gap-2">
+          <div class="input-group input-group-sm" style="max-width: 280px;">
+            <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+            <input type="text" class="form-control form-control-custom border-start-0" placeholder="Buscar por cliente, factura..."
+              [(ngModel)]="busqueda" (ngModelChange)="onBusqueda()">
+          </div>
+        </div>
+      </div>
+
+      <div class="app-table-wrap">
+        <table class="table table-hover align-middle mb-0">
+          <thead>
+            <tr>
+              <th class="ps-4" style="width: 15%;">Factura #</th>
+              <th style="width: 20%;">Fecha / Hora</th>
+              <th style="width: 25%;">Cliente</th>
+              <th style="width: 15%;">Tipo de Entrega</th>
+              <th style="width: 15%;">Método de Pago</th>
+              <th class="text-end pe-4" style="width: 10%;">Total Cobrado</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (venta of ventasPaginadas; track (venta.id_pedido || venta.id)) {
+              <tr>
+                <td class="ps-4">
+                  <span class="fw-bold text-brand fw-mono">#FAC-{{ venta.id_pedido || venta.id }}</span>
+                </td>
+                <td class="text-secondary small fw-medium">
+                  <i class="bi bi-calendar3 text-muted me-1.5 opacity-75"></i>{{ venta.fecha | date:'dd/MM/yyyy hh:mm a' }}
+                </td>
+                <td>
+                  <span class="fw-bold text-dark d-block">
+                    {{ venta.cliente || 'Cliente #' + (venta.fo_cliente || 'N/A') }}
+                  </span>
+                </td>
+                <td>
+                  @if (venta.tipo === 'domicilio') {
+                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2.5 py-1.5 rounded-pill fw-semibold small">
+                      <i class="bi bi-bicycle me-1"></i> Domicilio
+                    </span>
+                  } @else {
+                    <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2.5 py-1.5 rounded-pill fw-semibold small">
+                      <i class="bi bi-shop me-1"></i> {{ (venta.tipo || 'Local') | titlecase }}
+                    </span>
+                  }
+                </td>
+                <td>
+                  <span class="badge bg-light text-secondary border px-2.5 py-1.5 rounded-3 fw-medium small d-inline-flex align-items-center">
+                    <i class="bi bi-credit-card-2-back-fill text-muted opacity-75 me-1.5"></i> {{ venta.metodo_pago || 'Efectivo' }}
+                  </span>
+                </td>
+                <td class="text-end pe-4">
+                  <span class="fw-bold text-success fs-6">${{ (venta.total || 0) | number:'1.0-0' }}</span>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="6">
+                  <div class="app-loading-state py-5 text-center bg-white">
+                    <i class="bi bi-cash-stack text-muted opacity-50 mb-2" style="font-size: 2.5rem;"></i>
+                    <h6 class="mb-1 text-dark fw-bold fs-5">Sin registros de ventas</h6>
+                    <p class="text-secondary small mb-0">No se encontraron transacciones para este periodo.</p>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      @if (ventasFiltradas.length > 0) {
+      <div class="card-footer bg-white border-top py-3 px-4 d-flex flex-wrap align-items-center justify-content-between gap-2">
+        <span class="small text-secondary fw-medium">Mostrando {{ ventasPaginadas.length }} de {{ ventasFiltradas.length }} registros</span>
+        <nav aria-label="Paginación de ventas">
+          <ul class="pagination pagination-sm mb-0 rounded-2">
+            <li class="page-item" [class.disabled]="paginaActual === 1">
+              <a class="page-link px-2.5 py-1.5" (click)="cambiarPagina(paginaActual - 1); $event.preventDefault()" href="#">&#8249;</a>
+            </li>
+            @for (p of paginasArray; track p) {
+              <li class="page-item" [class.active]="paginaActual === p">
+                <a class="page-link px-3 py-1.5" [class.bg-brand]="paginaActual === p"
+                  (click)="cambiarPagina(p); $event.preventDefault()" href="#">{{ p }}</a>
+              </li>
+            }
+            <li class="page-item" [class.disabled]="paginaActual === totalPaginas || totalPaginas === 0">
+              <a class="page-link px-2.5 py-1.5" (click)="cambiarPagina(paginaActual + 1); $event.preventDefault()" href="#">&#8250;</a>
+            </li>
+          </ul>
+        </nav>
+      </div>
+      }
+    </div>
+  }
+</section>

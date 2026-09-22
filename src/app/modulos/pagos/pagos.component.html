@@ -1,0 +1,166 @@
+<!-- Template de Pagos - Historial de transacciones de pago del restaurante -->
+
+<section id="section-pagos" class="app-module active" aria-label="Historial de Pagos">
+
+  <!-- Encabezado de la pagina -->
+  <header class="page-header mb-4">
+    <nav class="breadcrumb-nav d-flex align-items-center gap-2 small text-muted mb-2">
+      <i class="bi bi-house-door-fill text-brand"></i> Inicio
+      <i class="bi bi-chevron-right" style="font-size: 0.7rem;"></i>
+      <span class="fw-medium text-dark">Pagos</span>
+    </nav>
+    <h2 class="page-title mb-1">Historial de Pagos</h2>
+    <p class="page-subtitle mb-0">Consulta las transacciones de pago, su estado y el método utilizado.</p>
+  </header>
+
+  <!-- Barra de herramientas con filtros -->
+  <div class="page-toolbar d-flex align-items-center gap-2 mb-4 flex-wrap">
+    <!-- Filtro por metodo de pago -->
+    <select class="form-select form-select-sm border rounded-pill px-3 py-1 fw-semibold text-secondary small shadow-sm"
+      style="width: auto; max-width: 180px;"
+      [(ngModel)]="filtroMetodo" (ngModelChange)="onFiltroCambio()">
+      <option value="todos">Todos los métodos</option>
+      <option value="Efectivo">Efectivo</option>
+      <option value="Nequi">Nequi</option>
+      <option value="Tarjeta">Tarjeta</option>
+      <option value="Daviplata">Daviplata</option>
+    </select>
+
+    <!-- Filtro por estado -->
+    <select class="form-select form-select-sm border rounded-pill px-3 py-1 fw-semibold text-secondary small shadow-sm"
+      style="width: auto; max-width: 180px;"
+      [(ngModel)]="filtroEstado" (ngModelChange)="onFiltroCambio()">
+      <option value="todos">Todos los estados</option>
+      <option value="aprobado">Aprobado</option>
+      <option value="pendiente">Pendiente</option>
+      <option value="rechazado">Rechazado</option>
+    </select>
+
+    <!-- Campo de busqueda -->
+    <div class="input-group input-group-sm" style="max-width: 280px;">
+      <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+      <input type="text" class="form-control form-control-custom border-start-0"
+        placeholder="Buscar pago, pedido, monto..."
+        [(ngModel)]="busqueda" (ngModelChange)="onFiltroCambio()">
+    </div>
+  </div>
+
+  <!-- Card principal con la tabla de pagos -->
+  <div class="app-card shadow-sm" id="table-pagos">
+    <div class="app-card-header d-flex justify-content-between align-items-center">
+      <h5 class="mb-0"><i class="bi bi-wallet2 text-brand me-2"></i>Transacciones de Pago</h5>
+      @if (pagosFiltrados.length > 0) {
+        <span class="badge rounded-pill bg-light text-dark border px-3 py-2 small fw-semibold">{{ pagosFiltrados.length }} pagos</span>
+      }
+    </div>
+
+    @if (cargando) {
+      <div class="app-loading-state py-5 text-center bg-white">
+        <div class="spinner-border text-brand" role="status">
+          <span class="visually-hidden">Cargando...</span>
+        </div>
+        <p class="text-muted small mt-2 mb-0">Cargando historial de pagos...</p>
+      </div>
+    } @else {
+      <div class="app-table-wrap">
+        <table class="table align-middle table-hover mb-0">
+          <thead>
+            <tr>
+              <th class="ps-4" style="width: 10%;">ID Pago</th>
+              <th style="width: 10%;">Pedido</th>
+              <th style="width: 15%;">Monto</th>
+              <th style="width: 15%;">Método</th>
+              <th style="width: 15%;">Estado</th>
+              <th style="width: 20%;">Fecha</th>
+              <th class="text-center pe-4" style="width: 15%;">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (pago of pagosPaginados; track pago.id_pago) {
+            <tr>
+              <td class="ps-4">
+                <span class="fw-bold text-dark">#{{ pago.id_pago }}</span>
+              </td>
+              <td>
+                <span class="text-secondary fw-semibold">
+                  <i class="bi bi-receipt text-muted me-1"></i>#{{ pago.fo_pedido }}
+                </span>
+              </td>
+              <td>
+                <span class="fw-bold text-dark fs-6">${{ pago.monto | number:'1.0-0' }}</span>
+              </td>
+              <td>
+                <span class="d-inline-flex align-items-center gap-1.5 text-secondary fw-semibold small">
+                  <i class="bi {{ getIconoMetodo(pago.metodo) }} text-muted"></i>
+                  {{ pago.metodo | titlecase }}
+                </span>
+              </td>
+              <td>
+                <span class="badge rounded-pill px-2.5 py-1.5 fw-semibold small {{ getBadgeEstado(pago.estado) }}">
+                  {{ pago.estado | titlecase }}
+                </span>
+              </td>
+              <td>
+                <span class="text-secondary small">{{ pago.fecha }}</span>
+              </td>
+              <td class="text-center pe-4">
+                <div class="d-flex justify-content-center align-items-center gap-2">
+                  <div class="dropdown">
+                    <button class="btn-action shadow-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Cambiar estado">
+                      <i class="bi bi-arrow-repeat"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0">
+                      <li><a class="dropdown-item" (click)="cambiarEstado(pago.id_pago, 'aprobado')">
+                        <i class="bi bi-check-circle text-success me-2"></i>Aprobar
+                      </a></li>
+                      <li><a class="dropdown-item" (click)="cambiarEstado(pago.id_pago, 'pendiente')">
+                        <i class="bi bi-clock text-warning me-2"></i>Pendiente
+                      </a></li>
+                      <li><hr class="dropdown-divider"></li>
+                      <li><a class="dropdown-item text-danger" (click)="anularPago(pago.id_pago)">
+                        <i class="bi bi-x-circle me-2"></i>Rechazar
+                      </a></li>
+                    </ul>
+                  </div>
+                </div>
+              </td>
+            </tr>
+            } @empty {
+            <tr>
+              <td colspan="7">
+                <div class="app-loading-state py-5 text-center bg-white">
+                  <i class="bi bi-wallet2 text-muted opacity-50 mb-2" style="font-size: 2.5rem;"></i>
+                  <h6 class="mb-1 text-dark fw-bold fs-5">Sin transacciones registradas</h6>
+                  <p class="text-secondary small mb-0">No se encontraron pagos en el historial.</p>
+                </div>
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      @if (pagosFiltrados.length > 0) {
+      <div class="card-footer bg-white border-top py-3 px-4 d-flex flex-wrap align-items-center justify-content-between gap-2">
+        <span class="small text-secondary fw-medium">Mostrando {{ pagosPaginados.length }} de {{ pagosFiltrados.length }} pagos</span>
+        <nav aria-label="Paginación de pagos">
+          <ul class="pagination pagination-sm mb-0 rounded-2">
+            <li class="page-item" [class.disabled]="paginaActual === 1">
+              <a class="page-link px-2.5 py-1.5" (click)="cambiarPagina(paginaActual - 1); $event.preventDefault()" href="#">&#8249;</a>
+            </li>
+            @for (p of paginasArray; track p) {
+              <li class="page-item" [class.active]="paginaActual === p">
+                <a class="page-link px-3 py-1.5" [class.bg-brand]="paginaActual === p"
+                  (click)="cambiarPagina(p); $event.preventDefault()" href="#">{{ p }}</a>
+              </li>
+            }
+            <li class="page-item" [class.disabled]="paginaActual === totalPaginas || totalPaginas === 0">
+              <a class="page-link px-2.5 py-1.5" (click)="cambiarPagina(paginaActual + 1); $event.preventDefault()" href="#">&#8250;</a>
+            </li>
+          </ul>
+        </nav>
+      </div>
+      }
+    }
+  </div>
+</section>

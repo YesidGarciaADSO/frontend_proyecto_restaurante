@@ -1,0 +1,211 @@
+<!-- ============================================= -->
+<!-- Template de Usuarios - Gestion de usuarios y roles del sistema -->
+<!-- ============================================= -->
+<section id="section-usuarios" class="app-module active" aria-label="Gestión de Usuarios y Roles">
+
+  <!-- Encabezado de la pagina -->
+  <header class="page-header mb-4">
+    <nav class="breadcrumb-nav d-flex align-items-center gap-2 small text-muted mb-2">
+      <i class="bi bi-house-door-fill text-brand"></i> Inicio
+      <i class="bi bi-chevron-right" style="font-size: 0.7rem;"></i>
+      <span class="fw-medium text-dark">Usuarios y Roles</span>
+    </nav>
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+      <div>
+        <h2 class="page-title mb-1">Gestión de Usuarios y Roles</h2>
+        <p class="page-subtitle mb-0">Controla de forma segura los accesos, credenciales y permisos del personal.</p>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <div class="input-group input-group-sm" style="max-width: 250px;">
+          <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+          <input type="text" class="form-control form-control-custom border-start-0" placeholder="Buscar por nombre, correo..."
+            [(ngModel)]="busqueda" (ngModelChange)="onBusqueda()">
+        </div>
+        <button (click)="cargarDatos()" class="btn btn-light border rounded-pill p-2 d-flex align-items-center justify-content-center shadow-sm" style="width: 38px; height: 38px;" title="Sincronizar">
+          <i class="bi bi-arrow-clockwise fs-5"></i>
+        </button>
+        <button class="btn btn-brand rounded-pill px-3 py-1 fw-bold shadow-sm d-flex align-items-center text-nowrap gap-2"
+          data-bs-toggle="modal" data-bs-target="#modalUsuario" (click)="limpiarFormulario()">
+          <i class="bi bi-person-plus-fill fs-5"></i> Nuevo Empleado
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Card principal con la tabla de usuarios -->
+  <div class="app-card shadow-sm">
+    @if (cargando) {
+      <div class="app-loading-state py-5 text-center">
+        <div class="spinner-border text-brand mb-3" role="status" style="width: 2.5rem; height: 2.5rem;">
+          <span class="visually-hidden">Consultando privilegios...</span>
+        </div>
+        <p class="text-secondary mb-0 fw-medium fs-6">Autenticando el árbol de usuarios con phpMyAdmin...</p>
+      </div>
+    } @else {
+      <div class="app-table-wrap">
+        <table class="table align-middle mb-0 table-hover" aria-label="Tabla de control de personal">
+          <thead>
+            <tr>
+              <th class="ps-4" style="width: 25%;">Empleado</th>
+              <th style="width: 25%;">Correo Electrónico</th>
+              <th style="width: 15%;">Teléfono</th>
+              <th style="width: 15%;">Rol Asignado</th>
+              <th style="width: 10%;">Estado</th>
+              <th class="text-center pe-4" style="width: 10%;">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (u of usuariosPaginados; track u.id_usuario) {
+              <tr>
+                <td class="ps-4">
+                  <div class="d-flex align-items-center gap-3">
+                    <div class="avatar-sample d-flex align-items-center justify-content-center rounded-circle text-brand fw-bold small"
+                      style="width: 36px; height: 36px; background: rgba(255,102,54,0.08); flex-shrink: 0; letter-spacing: 0.5px;">
+                      {{ u.nombre ? u.nombre.charAt(0).toUpperCase() : '' }}{{ u.apellido ? u.apellido.charAt(0).toUpperCase() : '' }}
+                    </div>
+                    <div>
+                      <span class="d-block text-dark fw-bold fs-6 mb-0">{{ u.nombre }} {{ u.apellido }}</span>
+                      <small class="text-muted fw-mono" style="font-size: 0.75rem;">ID: #USR-{{ u.id_usuario }}</small>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <span class="text-secondary fw-medium"><i class="bi bi-envelope-fill text-muted opacity-50 me-2"></i>{{ u.correo }}</span>
+                </td>
+                <td>
+                  <span class="text-secondary fw-medium">
+                    <i class="bi bi-telephone-fill text-muted opacity-50 me-2"></i>{{ u.telefono || '---' }}
+                  </span>
+                </td>
+                <td>
+                  <span class="badge bg-light text-secondary border px-3 py-1.5 rounded-pill fw-semibold small">
+                    <i class="bi bi-shield-lock-fill text-brand opacity-75 me-1" style="font-size: 0.8rem;"></i> {{ u.nombre_rol }}
+                  </span>
+                </td>
+                <td>
+                  <span class="badge rounded-pill px-2.5 py-1.5 fw-semibold small d-inline-flex align-items-center"
+                    [ngClass]="u.activo == 1 ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-danger-subtle text-danger border border-danger-subtle'">
+                    <span class="dot-status me-1.5" [ngClass]="u.activo == 1 ? 'bg-success' : 'bg-danger'"></span>
+                    {{ u.activo == 1 ? 'Activo' : 'Inactivo' }}
+                  </span>
+                </td>
+                <td class="text-center pe-4">
+                  <div class="d-flex justify-content-center gap-1">
+                    <button class="btn-action shadow-sm" data-bs-toggle="modal" data-bs-target="#modalUsuario" (click)="seleccionarUsuario(u)" title="Editar datos y rol">
+                      <i class="bi bi-pencil-square"></i>
+                    </button>
+                    <button class="btn-action shadow-sm" (click)="cambiarEstado(u.id_usuario, u.activo)" [title]="u.activo == 1 ? 'Desactivar empleado' : 'Activar empleado'">
+                      <i class="bi" [ngClass]="u.activo == 1 ? 'bi-toggle-on text-success fs-4' : 'bi-toggle-off text-muted fs-4'"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="6">
+                  <div class="app-loading-state py-5 text-center">
+                    <i class="bi bi-people text-muted opacity-50 mb-2" style="font-size: 2.5rem;"></i>
+                    <h6 class="mb-1 text-dark fw-bold fs-5">Sin empleados registrados</h6>
+                    <p class="text-secondary small mb-0">No se encontraron colaboradores en el sistema.</p>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      @if (usuariosFiltrados.length > 0) {
+      <div class="card-footer bg-white border-top py-3 px-4 d-flex flex-wrap align-items-center justify-content-between gap-2">
+        <span class="small text-secondary fw-medium">Mostrando {{ usuariosPaginados.length }} de {{ usuariosFiltrados.length }} usuarios</span>
+        <nav aria-label="Paginación de usuarios">
+          <ul class="pagination pagination-sm mb-0 rounded-2">
+            <li class="page-item" [class.disabled]="paginaActual === 1">
+              <a class="page-link px-2.5 py-1.5" (click)="cambiarPagina(paginaActual - 1); $event.preventDefault()" href="#">&#8249;</a>
+            </li>
+            @for (p of paginasArray; track p) {
+              <li class="page-item" [class.active]="paginaActual === p">
+                <a class="page-link px-3 py-1.5" [class.bg-brand]="paginaActual === p"
+                  (click)="cambiarPagina(p); $event.preventDefault()" href="#">{{ p }}</a>
+              </li>
+            }
+            <li class="page-item" [class.disabled]="paginaActual === totalPaginas || totalPaginas === 0">
+              <a class="page-link px-2.5 py-1.5" (click)="cambiarPagina(paginaActual + 1); $event.preventDefault()" href="#">&#8250;</a>
+            </li>
+          </ul>
+        </nav>
+      </div>
+      }
+    }
+  </div>
+</section>
+
+<!-- ============================================= -->
+<!-- MODAL: REGISTRAR / EDITAR USUARIO -->
+<!-- ============================================= -->
+<div class="modal fade" id="modalUsuario" tabindex="-1" aria-labelledby="modalUsuarioLabel" aria-hidden="true"
+  style="background: rgba(26, 29, 33, 0.4); backdrop-filter: blur(4px);">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg">
+
+      <div class="modal-header bg-white border-bottom border-light">
+        <h5 class="modal-title fw-bold text-dark d-flex align-items-center" id="modalUsuarioLabel">
+          <i class="bi bi-person-badge-fill text-brand me-2"></i>
+          {{ editando ? 'Modificar Personal / Rol' : 'Registrar Nuevo Personal' }}
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <form (ngSubmit)="guardarUsuario()" #formUsuario="ngForm">
+        <div class="modal-body bg-white py-4">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label text-secondary fw-bold small mb-1">Nombre</label>
+              <input type="text" class="form-control form-control-custom" [(ngModel)]="usuarioForm.nombre" name="nombre" required placeholder="Ej: Juan">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label text-secondary fw-bold small mb-1">Apellido</label>
+              <input type="text" class="form-control form-control-custom" [(ngModel)]="usuarioForm.apellido" name="apellido" required placeholder="Ej: Pérez">
+            </div>
+            <div class="col-12">
+              <label class="form-label text-secondary fw-bold small mb-1">Correo Electrónico</label>
+              <div class="input-group">
+                <span class="input-group-text bg-light text-muted border-0"><i class="bi bi-envelope"></i></span>
+                <input type="email" class="form-control form-control-custom" [(ngModel)]="usuarioForm.correo" name="correo" required placeholder="nombre@teyo.com">
+              </div>
+            </div>
+            <div class="col-12">
+              <label class="form-label text-secondary fw-bold small mb-1">Contraseña de Acceso</label>
+              <div class="input-group">
+                <span class="input-group-text bg-light text-muted border-0"><i class="bi bi-key-fill"></i></span>
+                <input type="password" class="form-control form-control-custom" [(ngModel)]="usuarioForm.password" name="password" [required]="!editando" [placeholder]="editando ? 'Dejar en blanco para conservar actual' : 'Mínimo 6 caracteres'">
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label text-secondary fw-bold small mb-1">Teléfono</label>
+              <input type="text" class="form-control form-control-custom" [(ngModel)]="usuarioForm.telefono" name="telefono" placeholder="Ej. 3001234567">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label text-secondary fw-bold small mb-1">Rol del Sistema</label>
+              <select class="form-select form-control-custom" [(ngModel)]="usuarioForm.fo_rol" name="fo_rol" required>
+                <option value="" disabled selected>Seleccione...</option>
+                @for (r of listaRoles; track r.id_rol) {
+                  <option [value]="r.id_rol">{{ r.nombre }}</option>
+                }
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer bg-white border-top border-light gap-2">
+          <button type="button" class="btn btn-light border rounded-pill px-4 fw-semibold text-secondary small" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-brand rounded-pill px-4 fw-bold shadow-sm" [disabled]="!formUsuario.form.valid" data-bs-dismiss="modal">
+            <i class="bi bi-cloud-arrow-up-fill me-1"></i>
+            {{ editando ? 'Actualizar Cambios' : 'Guardar Empleado' }}
+          </button>
+        </div>
+      </form>
+
+    </div>
+  </div>
+</div>

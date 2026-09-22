@@ -1,0 +1,162 @@
+<!-- Pagina de ajustes - configuracion general del restaurante, impuestos y parametros de cocina -->
+
+<section id="section-ajustes" class="app-module active" aria-label="Configuración General">
+
+  <!-- Cabecera de ajustes -->
+  <header class="page-header mb-4">
+    <nav class="breadcrumb-nav d-flex align-items-center gap-2 small text-muted mb-2">
+      <i class="bi bi-house-door-fill text-brand"></i> Inicio
+      <i class="bi bi-chevron-right" style="font-size: 0.7rem;"></i>
+      <span class="fw-medium text-dark">Ajustes</span>
+    </nav>
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+      <div>
+        <h2 class="page-title mb-1">Configuración General</h2>
+        <p class="page-subtitle mb-0">Gestiona los parámetros operativos, comerciales y de facturación del restaurante.</p>
+      </div>
+      <button class="btn btn-brand rounded-pill px-4 py-2 fw-bold shadow-sm d-flex align-items-center gap-2" (click)="guardarAjustes()">
+        <i class="bi bi-cloud-arrow-up-fill fs-5"></i> Guardar Cambios
+      </button>
+    </div>
+  </header>
+
+  <!-- Mensaje de confirmacion cuando se guardan los ajustes -->
+  @if (mensajeGuardado) {
+    <div class="alert alert-brand-fade border-0 py-2.5 px-3 small rounded-3 mb-4 d-flex align-items-center gap-2 shadow-sm" role="alert">
+      <i class="bi bi-check-circle-fill fs-5"></i>
+      <span class="fw-medium">{{ mensajeGuardado }}</span>
+    </div>
+  }
+
+  <div class="row g-4">
+    <!-- COLUMNA IZQUIERDA: Perfil del restaurante e impuestos -->
+    <div class="col-12 col-lg-8">
+
+      <!-- Tarjeta: Perfil del restaurante -->
+      <div class="app-card mb-4 shadow-sm">
+        <div class="app-card-header">
+          <h5><i class="bi bi-shop text-brand me-2"></i>Perfil del Restaurante</h5>
+        </div>
+        <div class="app-card-body">
+          <p class="text-muted small mb-4 bg-light p-2 rounded-3 border-start border-4 border-brand">
+            <i class="bi bi-info-circle-fill me-1 text-brand"></i> Esta información se imprimirá automáticamente en los recibos de venta y comandas físicas.
+          </p>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold text-secondary">Nombre del Negocio</label>
+              <input type="text" class="form-control form-control-custom" [(ngModel)]="negocio.nombre">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold text-secondary">NIT / Identificación Fiscal</label>
+              <input type="text" class="form-control form-control-custom" [(ngModel)]="negocio.nit">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold text-secondary">Teléfono de Contacto</label>
+              <input type="text" class="form-control form-control-custom" [(ngModel)]="negocio.telefono">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-semibold text-secondary">Dirección Física</label>
+              <input type="text" class="form-control form-control-custom" [(ngModel)]="negocio.direccion">
+            </div>
+            <div class="col-12">
+              <label class="form-label small fw-semibold text-secondary">Mensaje al Pie del Recibo (Comanda)</label>
+              <textarea class="form-control form-control-custom" rows="2" placeholder="¡Gracias por tu compra! Vuelve pronto..." [(ngModel)]="negocio.mensajeRecibo"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tarjeta: Configuracion de impuestos y facturacion -->
+      <div class="app-card shadow-sm">
+        <div class="app-card-header">
+          <h5><i class="bi bi-currency-dollar text-brand me-2"></i>Impuestos y Facturación</h5>
+        </div>
+        <div class="app-card-body">
+          <p class="text-muted small mb-4">Configuración de valores financieros legales y sugeridos de consumo.</p>
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold text-secondary">Impoconsumo / IVA (%)</label>
+              <div class="input-group">
+                <input type="number" class="form-control form-control-custom" [(ngModel)]="finanzas.impuestoPorcentaje">
+                <span class="input-group-text bg-light text-muted fw-bold border-0">%</span>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold text-secondary">Propina Sugerida (%)</label>
+              <div class="input-group">
+                <input type="number" class="form-control form-control-custom" [(ngModel)]="finanzas.propinaSugerida">
+                <span class="input-group-text bg-light text-muted fw-bold border-0">%</span>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-semibold text-secondary">Moneda Base</label>
+              <select class="form-select form-control-custom" [(ngModel)]="finanzas.moneda">
+                <option value="COP">COP ($) Pesos Colombianos</option>
+                <option value="USD">USD ($) Dólares</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- COLUMNA DERECHA: Parametros operativos de cocina -->
+    <div class="col-12 col-lg-4">
+      <div class="app-card h-100 shadow-sm">
+        <div class="app-card-header">
+          <h5><i class="bi bi-sliders text-brand me-2"></i>Parámetros de Cocina</h5>
+        </div>
+        <div class="app-card-body d-flex flex-column gap-4">
+          <p class="text-muted small mb-0">Control operativo y automatizaciones de despacho en tiempo real.</p>
+
+          <!-- Switch: Abrir o cerrar el restaurante -->
+          <div class="d-flex align-items-center justify-content-between p-3 rounded-3" style="background-color: #FFF5F2; border: 1px solid #FFE0D6;">
+            <div style="max-width: 75%;">
+              <span class="fw-bold d-block text-dark small">Estado del Restaurante</span>
+              <small class="text-muted d-block" style="font-size: 0.75rem;">Habilitar o pausar de inmediato la recepción de pedidos.</small>
+            </div>
+            <div class="form-check form-switch fs-4 m-0 custom-switch-brand">
+              <input class="form-check-input style-toggle-input" type="checkbox" role="switch" id="switchEstadoTienda" [checked]="tiendaAbierta" (change)="toggleTienda()">
+            </div>
+          </div>
+
+          <!-- Input: Tiempo estimado de espera -->
+          <div>
+            <label class="form-label small fw-bold text-dark">Tiempo de Espera Promedio</label>
+            <div class="input-group">
+              <input type="number" class="form-control form-control-custom" [(ngModel)]="negocio.tiempoEstimado">
+              <span class="input-group-text bg-light text-muted small border-0 fw-medium">minutos</span>
+            </div>
+            <small class="text-muted d-block mt-1" style="font-size: 0.75rem;">Aparece impreso como referencia para el cliente en el despacho.</small>
+          </div>
+
+          <hr class="my-1 text-muted opacity-25">
+
+          <!-- Switch: Alerta sonora de nuevos pedidos -->
+          <div class="d-flex align-items-center justify-content-between py-2">
+            <div style="max-width: 80%;">
+              <span class="fw-semibold text-dark d-block small"><i class="bi bi-volume-up-fill text-secondary me-2"></i>Alerta de Pedidos</span>
+              <small class="text-muted d-block" style="font-size: 0.75rem;">Emitir un sonido persistente cada vez que ingrese una nueva comanda al sistema.</small>
+            </div>
+            <div class="form-check form-switch fs-4 m-0 custom-switch-brand">
+              <input class="form-check-input style-toggle-input" type="checkbox" role="switch" id="switchAlertaSonora" [checked]="alertaSonora" (change)="toggleAlertaSonora()">
+            </div>
+          </div>
+
+          <!-- Switch: Auto-impresion de comandas -->
+          <div class="d-flex align-items-center justify-content-between py-2">
+            <div style="max-width: 80%;">
+              <span class="fw-semibold text-dark d-block small"><i class="bi bi-printer-fill text-secondary me-2"></i>Auto-Impresión</span>
+              <small class="text-muted d-block" style="font-size: 0.75rem;">Imprimir la comanda de cocina de forma automatizada al guardar cualquier pedido.</small>
+            </div>
+            <div class="form-check form-switch fs-4 m-0 custom-switch-brand">
+              <input class="form-check-input style-toggle-input" type="checkbox" role="switch" id="switchAutoImpresion" [checked]="impresionAutomatica" (change)="toggleImpresion()">
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

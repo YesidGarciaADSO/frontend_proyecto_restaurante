@@ -1,0 +1,197 @@
+<!-- ============================================= -->
+<!-- Template de Clientes - Directorio de clientes del restaurante -->
+<!-- ============================================= -->
+<section id="section-clientes" class="app-module active" aria-label="Gestión de Clientes">
+
+  <!-- Encabezado de la pagina con breadcrumb y titulo -->
+  <header class="page-header mb-4">
+    <nav class="breadcrumb-nav d-flex align-items-center gap-2 small text-muted mb-2">
+      <i class="bi bi-house-door-fill text-brand"></i> Inicio
+      <i class="bi bi-chevron-right" style="font-size: 0.7rem;"></i>
+      <span class="fw-medium text-dark">Clientes</span>
+    </nav>
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+      <div>
+        <h2 class="page-title mb-1">Directorio de Clientes</h2>
+        <p class="page-subtitle mb-0">Administra las bases de datos de contacto, historiales de llamadas y direcciones fijas de entrega.</p>
+      </div>
+      <div class="d-flex align-items-center gap-2">
+        <div class="input-group input-group-sm" style="max-width: 250px;">
+          <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+          <input type="text" class="form-control form-control-custom border-start-0" placeholder="Buscar por nombre, teléfono..."
+            [(ngModel)]="busqueda" (ngModelChange)="onBusqueda()">
+        </div>
+        <button class="btn btn-brand rounded-pill px-3 py-1 fw-bold shadow-sm d-flex align-items-center text-nowrap gap-2" (click)="abrirModal()">
+          <i class="bi bi-person-plus-fill fs-5"></i> Nuevo Cliente
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Card principal con la tabla de clientes -->
+  <div class="app-card shadow-sm">
+    <div class="app-card-header d-flex justify-content-between align-items-center">
+      <h5><i class="bi bi-people-fill text-brand me-2"></i>Lista General de Clientes</h5>
+      @if (clientesFiltrados.length > 0) {
+        <span class="badge rounded-pill bg-light text-dark border px-3 py-2 small fw-semibold">{{ clientesFiltrados.length }} Registrados</span>
+      }
+    </div>
+
+    <div class="app-card-body p-0">
+      @if (clientesFiltrados.length > 0) {
+      <div class="app-table-wrap">
+        <table class="table table-hover align-middle mb-0" aria-label="Tabla de Directorio de Clientes">
+          <thead>
+            <tr>
+              <th style="width: 25%;">Nombre</th>
+              <th style="width: 20%;">Teléfono</th>
+              <th style="width: 30%;">Dirección de Envío</th>
+              <th style="width: 15%;">Ciudad</th>
+              <th style="width: 10%;" class="text-center">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (cli of clientesPaginados; track cli.id_cliente) {
+            <tr>
+              <td>
+                <div class="d-flex align-items-center gap-2">
+                  <div class="avatar-sample d-none d-sm-flex align-items-center justify-content-center rounded-circle text-brand fw-bold small"
+                    style="width: 32px; height: 32px; background: rgba(255,102,54,0.08); flex-shrink: 0;">
+                    {{ cli.nombre ? cli.nombre.charAt(0).toUpperCase() : 'C' }}
+                  </div>
+                  <span class="fw-bold text-dark fs-6">{{ cli.nombre }}</span>
+                </div>
+              </td>
+              <td class="fw-medium text-secondary">
+                <i class="bi bi-telephone-fill text-muted opacity-50 me-2"></i>{{ cli.telefono || '---' }}
+              </td>
+              <td class="text-secondary fw-medium">
+                <i class="bi bi-geo-alt-fill text-brand opacity-75 me-2"></i>{{ cli.direccion || '---' }}
+              </td>
+              <td>
+                <span class="badge bg-light text-secondary border px-3 py-1.5 rounded-pill fw-semibold small">
+                  <i class="bi bi-building me-1 opacity-75"></i> {{ cli.nombre_ciudad || 'No asignada' }}
+                </span>
+              </td>
+              <td class="text-center">
+                <div class="d-flex justify-content-center gap-1">
+                  <button type="button" (click)="seleccionarClienteParaEditar(cli)" class="btn-action shadow-sm" title="Editar ficha de cliente">
+                    <i class="bi bi-pencil-fill"></i>
+                  </button>
+                  <button type="button" (click)="eliminarCliente(cli.id_cliente)" class="btn-action danger shadow-sm" title="Eliminar del registro">
+                    <i class="bi bi-trash3-fill"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card-footer bg-white border-top py-3 px-4 d-flex flex-wrap align-items-center justify-content-between gap-2">
+        <span class="small text-secondary fw-medium">Mostrando {{ clientesPaginados.length }} de {{ clientesFiltrados.length }} clientes</span>
+        <nav aria-label="Paginación de clientes">
+          <ul class="pagination pagination-sm mb-0 rounded-2">
+            <li class="page-item" [class.disabled]="paginaActual === 1">
+              <a class="page-link px-2.5 py-1.5" (click)="cambiarPagina(paginaActual - 1); $event.preventDefault()" href="#">&#8249;</a>
+            </li>
+            @for (p of paginasArray; track p) {
+              <li class="page-item" [class.active]="paginaActual === p">
+                <a class="page-link px-3 py-1.5" [class.bg-brand]="paginaActual === p"
+                  (click)="cambiarPagina(p); $event.preventDefault()" href="#">{{ p }}</a>
+              </li>
+            }
+            <li class="page-item" [class.disabled]="paginaActual === totalPaginas || totalPaginas === 0">
+              <a class="page-link px-2.5 py-1.5" (click)="cambiarPagina(paginaActual + 1); $event.preventDefault()" href="#">&#8250;</a>
+            </li>
+          </ul>
+        </nav>
+      </div>
+
+      } @else {
+      <div class="app-loading-state py-5 text-center">
+        <i class="bi bi-people text-muted opacity-50 mb-2" style="font-size: 2.5rem;"></i>
+        <p class="text-secondary mb-0 fw-medium fs-6">No se encontraron clientes.</p>
+      </div>
+      }
+    </div>
+  </div>
+</section>
+
+<!-- ============================================= -->
+<!-- MODAL REGISTRAR / EDITAR CLIENTE -->
+<!-- ============================================= -->
+@if (modalAbierto) {
+<div class="modal fade show d-block" tabindex="-1" aria-hidden="true"
+  style="background: rgba(26, 29, 33, 0.4); backdrop-filter: blur(4px);">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg">
+
+      <div class="modal-header bg-white border-bottom border-light">
+        <h5 class="modal-title fw-bold text-dark d-flex align-items-center">
+          <i class="bi bi-person-badge-fill text-brand me-2"></i> {{ idClienteEditar > 0 ? 'Editar Cliente' : 'Ficha de Cliente' }}
+        </h5>
+        <button type="button" class="btn-close" (click)="cerrarModal()" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body bg-white py-4">
+        <form (ngSubmit)="guardarCliente()" #formCliente="ngForm">
+
+          <div class="mb-3">
+            <label class="form-label small fw-bold text-secondary mb-1">Nombre Completo</label>
+            <input type="text" class="form-control form-control-custom" [(ngModel)]="nuevoCliente.nombre" name="nombre"
+              required placeholder="Ej. Juan Pérez">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small fw-bold text-secondary mb-1">Teléfono / Celular</label>
+            <div class="input-group">
+              <span class="input-group-text bg-light text-muted border-0 fw-medium">+57</span>
+              <input type="text" class="form-control form-control-custom" [(ngModel)]="nuevoCliente.telefono"
+                name="telefono" required placeholder="Ej. 3001234567">
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label small fw-bold text-secondary mb-1">Dirección de Residencia</label>
+            <input type="text" class="form-control form-control-custom" [(ngModel)]="nuevoCliente.direccion"
+              name="direccion" required placeholder="Ej. Calle 10 # 4-12">
+          </div>
+
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <label class="form-label small fw-bold text-secondary mb-1">Departamento</label>
+              <select class="form-select form-control-custom" [(ngModel)]="idDepartamentoSeleccionado"
+                name="id_departamento" (change)="onDepartamentoChange()" required>
+                <option [value]="0" disabled selected>Seleccione...</option>
+                @for (dep of listaDepartamentos; track dep.id_departamento) {
+                <option [value]="dep.id_departamento">{{ dep.nombre }}</option>
+                }
+              </select>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label small fw-bold text-secondary mb-1">Ciudad</label>
+              <select class="form-select form-control-custom" [(ngModel)]="nuevoCliente.fo_ciudad" name="fo_ciudad"
+                [disabled]="idDepartamentoSeleccionado === 0" required>
+                <option [value]="0" disabled selected>Seleccione...</option>
+                @for (ciudad of listaCiudades; track ciudad.id_ciudad) {
+                <option [value]="ciudad.id_ciudad">{{ ciudad.nombre }}</option>
+                }
+              </select>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-brand w-100 rounded-pill py-2.5 fw-bold shadow-sm"
+            [disabled]="!formCliente.form.valid">
+            <i class="bi bi-cloud-arrow-up-fill me-1"></i> {{ idClienteEditar > 0 ? 'Actualizar Cliente' : 'Guardar Ficha de Cliente' }}
+          </button>
+
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+}

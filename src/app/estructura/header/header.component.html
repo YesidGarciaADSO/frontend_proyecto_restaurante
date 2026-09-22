@@ -1,0 +1,37 @@
+<!-- barra superior -->
+<header class="top-header bg-white border-bottom shadow-sm px-3 px-lg-4 d-flex align-items-center gap-3" role="banner"
+  style="height: 70px;">
+
+  <!-- boton hamburguer movil -->
+  <button
+    class="btn btn-light border d-lg-none rounded-circle p-2 d-flex align-items-center justify-content-center shadow-sm"
+    (click)="sidebar.toggle(); $event.stopPropagation()">
+    <i class="bi bi-list fs-4 text-dark"></i>
+  </button>
+
+  <!-- titulo -->
+  <div class="me-auto">
+    <h1 class="fw-bold text-dark mb-0 h5">Panel de Control</h1>
+    <small class="text-muted fw-medium d-none d-sm-block" style="font-size: 0.75rem;">Bienvenido de nuevo</small>
+  </div>
+
+  <!-- usuario -->
+  <div class="d-flex align-items-center gap-2.5 border-start ps-3 ms-1">
+    <div
+      class="rounded-circle bg-brand-subtle text-brand fw-bold d-flex align-items-center justify-content-center border border-brand-subtle shadow-sm"
+      style="width: 40px; height: 40px; font-size: 0.95rem;">
+      {{ usuarioSesion?.nombre ? usuarioSesion.nombre.charAt(0).toUpperCase() : 'U' }}{{ usuarioSesion?.apellido ? usuarioSesion.apellido.charAt(0).toUpperCase() : '' }}
+    </div>
+    <div class="lh-sm d-none d-sm-block">
+      <div class="text-muted fw-bold" style="font-size: 0.65rem; letter-spacing: 0.5px;">
+        {{ usuarioSesion?.nombre_rol || 'USUARIO' }}</div>
+      <span class="text-dark fw-bold d-block" style="font-size: 0.85rem;">{{ usuarioSesion?.nombre || 'Sin sesion' }} {{ usuarioSesion?.apellido || '' }}</span>
+    </div>
+  </div>
+
+  <!-- cerrar sesion -->
+  <button class="btn btn-light border rounded-circle d-flex align-items-center justify-content-center shadow-sm text-danger ms-2"
+    style="height: 40px; width: 40px;" (click)="logout()" title="Cerrar sesion">
+    <i class="bi bi-box-arrow-right fs-5"></i>
+  </button>
+</header>

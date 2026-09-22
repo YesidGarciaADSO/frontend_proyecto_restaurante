@@ -1,0 +1,228 @@
+<!-- ============================================= -->
+<!-- Template de Productos - Catalogo e inventario de productos del restaurante -->
+<!-- ============================================= -->
+<section id="section-productos" class="app-module active" aria-label="Productos e Inventario">
+
+  <!-- Encabezado de la pagina -->
+  <header class="page-header mb-4">
+    <nav class="breadcrumb-nav d-flex align-items-center gap-2 small text-muted mb-2">
+      <i class="bi bi-house-door-fill text-brand"></i> Inicio
+      <i class="bi bi-chevron-right" style="font-size: 0.7rem;"></i>
+      <span class="fw-medium text-dark">Productos</span>
+    </nav>
+    <h2 class="page-title mb-1">Productos e Inventario</h2>
+    <p class="page-subtitle mb-0">Administra el menú digital, precios al consumidor y los niveles críticos de stock en bodega.</p>
+  </header>
+
+  <!-- Barra de herramientas con boton nuevo y buscador -->
+  <div class="page-toolbar d-flex align-items-center gap-2 mb-4 flex-wrap">
+    <button class="btn btn-brand rounded-pill px-3 py-1 fw-bold shadow-sm" (click)="abrirModal()">
+      <i class="bi bi-plus-circle fs-5"></i> Nuevo Producto
+    </button>
+    <div class="input-group input-group-sm" style="max-width: 280px;">
+      <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+      <input type="text" class="form-control form-control-custom border-start-0" placeholder="Buscar producto o categoría..."
+        [(ngModel)]="busqueda" (ngModelChange)="onBusqueda()">
+    </div>
+  </div>
+
+  <!-- Card principal con la tabla de productos -->
+  <div class="app-card shadow-sm" id="table-productos">
+    <div class="app-card-header d-flex justify-content-between align-items-center">
+      <h5 class="mb-0"><i class="bi bi-box-seam text-brand me-2"></i>Catálogo de Productos</h5>
+      @if (productosFiltrados.length > 0) {
+        <span class="badge rounded-pill bg-light text-dark border px-3 py-2 small fw-semibold">{{ productosFiltrados.length }} productos</span>
+      }
+    </div>
+
+    <div class="app-table-wrap">
+      <table class="table align-middle table-hover mb-0">
+        <thead>
+          <tr>
+            <th class="ps-4" style="width: 20%;">Producto</th>
+            <th style="width: 20%;">Descripción</th>
+            <th style="width: 12%;">Categoría</th>
+            <th style="width: 12%;">Precio Venta</th>
+            <th style="width: 12%;">Existencias (Stock)</th>
+            <th style="width: 12%;">Estado Logístico</th>
+            <th style="width: 12%;">Proveedor</th>
+            <th class="text-center pe-4" style="width: 10%;">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (prod of productosPaginados; track prod.id_producto) {
+          <tr>
+            <td class="ps-4">
+              <div class="d-flex align-items-center gap-3">
+                <div class="avatar-sample d-flex align-items-center justify-content-center rounded-3 bg-light fs-4 shadow-sm"
+                  style="width: 40px; height: 40px; flex-shrink: 0;">
+                  {{ prod.nombre_categoria === 'Bebidas' ? '🥤' : '🍔' }}
+                </div>
+                <div>
+                  <span class="fw-bold text-dark d-block fs-6 mb-0">{{ prod.nombre }}</span>
+                  <small class="text-muted fw-mono" style="font-size: 0.75rem;">SKU: #PRD-{{ prod.id_producto }}</small>
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="text-secondary small" [title]="prod.descripcion">{{ prod.descripcion || 'Sin descripción' }}</span>
+            </td>
+            <td>
+              <span class="text-secondary fw-semibold small bg-light px-2.5 py-1 rounded">{{ prod.nombre_categoria || 'General' }}</span>
+            </td>
+            <td>
+              <span class="fw-bold text-dark fs-6">${{ prod.precio | number:'1.0-0' }}</span>
+            </td>
+            <td>
+              <span class="fw-bold d-block mb-1"
+                [ngClass]="{'text-success': prod.stock > 5, 'text-warning': prod.stock <= 5 && prod.stock > 0, 'text-danger': !prod.stock || prod.stock == 0}">
+                {{ prod.stock || 0 }} und.
+              </span>
+              <div class="progress rounded-pill bg-light" style="height: 5px; width: 85%;">
+                <div class="progress-bar rounded-pill transition-all" role="progressbar"
+                  [style.width.%]="prod.stock > 0 ? (prod.stock > 5 ? 100 : 35) : 0"
+                  [ngClass]="{'bg-success': prod.stock > 5, 'bg-warning': prod.stock <= 5 && prod.stock > 0, 'bg-danger': !prod.stock || prod.stock == 0}">
+                </div>
+              </div>
+            </td>
+            <td>
+              @if (prod.stock > 5) {
+              <span class="badge bg-success-subtle text-success border border-success-subtle px-2.5 py-1.5 rounded-pill fw-semibold small d-inline-flex align-items-center">
+                <span class="dot-status bg-success me-1.5"></span> Disponible
+              </span>
+              } @else if (prod.stock <= 5 && prod.stock > 0) {
+              <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2.5 py-1.5 rounded-pill fw-semibold small d-inline-flex align-items-center">
+                <span class="dot-status bg-warning me-1.5"></span> Stock bajo
+              </span>
+              } @else {
+              <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2.5 py-1.5 rounded-pill fw-semibold small d-inline-flex align-items-center">
+                <span class="dot-status bg-danger me-1.5"></span> Agotado
+              </span>
+              }
+            </td>
+            <td>
+              <span class="text-secondary small fw-medium"><i class="bi bi-truck text-muted opacity-75 me-1.5"></i>{{ prod.proveedor || 'Distribuidor Local' }}</span>
+            </td>
+            <td class="text-center pe-4">
+              <div class="d-flex justify-content-center align-items-center gap-2">
+                <button class="btn-action shadow-sm" (click)="editarProducto(prod)" title="Editar ficha técnica">
+                  <i class="bi bi-pencil-square"></i>
+                </button>
+                <button class="btn-action danger shadow-sm" (click)="eliminarProducto(prod.id_producto, prod.nombre)" title="Eliminar producto">
+                  <i class="bi bi-trash3"></i>
+                </button>
+                <div class="form-check form-switch m-0 d-inline-flex align-items-center">
+                  <input #chk class="form-check-input custom-switch-brand" type="checkbox" role="switch"
+                    [checked]="prod.activo == 1" (change)="cambiarEstadoProducto(prod.id_producto, chk.checked)">
+                </div>
+              </div>
+            </td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="8">
+              <div class="app-loading-state py-5 text-center bg-white">
+                <i class="bi bi-box-seam text-muted opacity-50 mb-2" style="font-size: 2.5rem;"></i>
+                <h6 class="mb-1 text-dark fw-bold fs-5">Menú de productos vacío</h6>
+                <p class="text-secondary small mb-0">No se encontraron artículos en el catálogo.</p>
+              </div>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (productosFiltrados.length > 0) {
+    <div class="card-footer bg-white border-top py-3 px-4 d-flex flex-wrap align-items-center justify-content-between gap-2">
+      <span class="small text-secondary fw-medium">Mostrando {{ productosPaginados.length }} de {{ productosFiltrados.length }} productos</span>
+      <nav aria-label="Paginación de productos">
+        <ul class="pagination pagination-sm mb-0 rounded-2">
+          <li class="page-item" [class.disabled]="paginaActual === 1">
+            <a class="page-link px-2.5 py-1.5" (click)="cambiarPagina(paginaActual - 1); $event.preventDefault()" href="#">&#8249;</a>
+          </li>
+          @for (p of paginasArray; track p) {
+            <li class="page-item" [class.active]="paginaActual === p">
+              <a class="page-link px-3 py-1.5" [class.bg-brand]="paginaActual === p"
+                (click)="cambiarPagina(p); $event.preventDefault()" href="#">{{ p }}</a>
+            </li>
+          }
+          <li class="page-item" [class.disabled]="paginaActual === totalPaginas || totalPaginas === 0">
+            <a class="page-link px-2.5 py-1.5" (click)="cambiarPagina(paginaActual + 1); $event.preventDefault()" href="#">&#8250;</a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+    }
+  </div>
+</section>
+
+<!-- ============================================= -->
+<!-- MODAL: REGISTRAR / EDITAR PRODUCTO -->
+<!-- ============================================= -->
+@if (modalAbierto) {
+<div class="modal fade show d-block" tabindex="-1" aria-hidden="true"
+  style="background: rgba(26, 29, 33, 0.4); backdrop-filter: blur(4px);">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg">
+
+      <div class="modal-header bg-white border-bottom border-light">
+        <h5 class="modal-title fw-bold text-dark d-flex align-items-center">
+          <i class="bi bi-egg-fried text-brand me-2"></i> {{ nuevoProducto.id_producto ? 'Editar Producto' : 'Registrar Nuevo Producto' }}
+        </h5>
+        <button type="button" class="btn-close" (click)="cerrarModal()" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body bg-white py-4">
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="form-label text-secondary fw-bold small mb-1">Nombre Comercial del Producto</label>
+            <input type="text" class="form-control form-control-custom" [(ngModel)]="nuevoProducto.nombre"
+              placeholder="Ej: Hamburguesa Especial de la Casa">
+          </div>
+
+          <div class="col-12">
+            <label class="form-label text-secondary fw-bold small mb-1">Categoría del Menú</label>
+            <select class="form-select form-control-custom" [(ngModel)]="nuevoProducto.fo_categoria">
+              <option value="" disabled selected>Selecciona una categoría...</option>
+              @for (cat of listaCategorias; track cat.id_categoria) {
+              <option [value]="cat.id_categoria">{{ cat.nombre }}</option>
+              }
+            </select>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label text-secondary fw-bold small mb-1">Descripción del Producto</label>
+            <textarea class="form-control form-control-custom" [(ngModel)]="nuevoProducto.descripcion"
+              placeholder="Ej: Hamburguesa doble carne con queso, lechuga y tomate" rows="3"></textarea>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label text-secondary fw-bold small mb-1">Precio al Público (COP)</label>
+            <div class="input-group">
+              <span class="input-group-text bg-light text-muted border-0 fw-bold">$</span>
+              <input type="number" class="form-control form-control-custom" [(ngModel)]="nuevoProducto.precio"
+                placeholder="0">
+            </div>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label text-secondary fw-bold small mb-1">Stock Actual</label>
+            <input type="number" class="form-control form-control-custom" [(ngModel)]="nuevoProducto.stock"
+              placeholder="0" min="0">
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer bg-white border-top border-light gap-2">
+        <button type="button" class="btn btn-light border rounded-pill px-4 fw-semibold text-secondary small"
+          (click)="cerrarModal()">Cancelar</button>
+        <button type="button" class="btn btn-brand rounded-pill px-4 fw-bold shadow-sm" (click)="guardarProducto()">
+          <i class="bi bi-cloud-arrow-up-fill me-1"></i> Guardar e Indexar
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+}

@@ -1,0 +1,156 @@
+<!-- ============================================= -->
+<!-- Template de Categorias - Gestion de categorias de productos del menu -->
+<!-- ============================================= -->
+<section id="section-categorias" class="app-module active" aria-label="Gestión de Categorías">
+  
+  <!-- Encabezado de la pagina -->
+  <header class="page-header mb-4">
+    <!-- Barra de navegacion breadcrumb -->
+    <nav class="breadcrumb-nav d-flex align-items-center gap-2 small text-muted mb-2">
+      <i class="bi bi-house-door-fill text-brand"></i> Inicio
+      <i class="bi bi-chevron-right" style="font-size: 0.7rem;"></i>
+      <span class="text-secondary">Productos</span>
+      <i class="bi bi-chevron-right" style="font-size: 0.7rem;"></i>
+      <span class="fw-medium text-dark">Categorías</span>
+    </nav>
+    <h2 class="page-title">Gestión de Categorías</h2>
+    <p class="page-subtitle mb-0">Administra y organiza los grupos de menús disponibles en la plataforma.</p>
+  </header>
+
+  <!-- Layout de dos columnas -->
+  <div class="row g-4">
+    <!-- COLUMNA IZQUIERDA: Formulario para crear categoria -->
+    <div class="col-12 col-lg-4">
+      <div class="app-card h-100 shadow-sm">
+        <div class="app-card-header">
+          <h5><i class="bi bi-plus-circle-fill text-brand me-2"></i>Nueva Categoría</h5>
+        </div>
+        <div class="app-card-body">
+          
+          <!-- Mensaje de exito cuando se guarda una categoria -->
+          @if (mensajeAlerta) {
+            <div class="alert alert-success py-2 px-3 small mb-4 border-0 border-start border-4 border-success d-flex align-items-center gap-2" role="alert" style="background-color: #F2FBF6; color: #14532D; border-radius: 4px 8px 8px 4px;">
+              <i class="bi bi-check-circle-fill fs-6 text-success"></i>
+              <span class="fw-medium">{{ mensajeAlerta }}</span>
+            </div>
+          }
+
+          <!-- Campo de nombre de la categoria -->
+          <div class="mb-4">
+            <label for="nombreCat" class="form-label small fw-semibold text-secondary mb-2">Nombre de la Categoría</label>
+            <input type="text" id="nombreCat" class="form-control form-control-custom" placeholder="Ej: Hamburguesas, Bebidas, Combos" [(ngModel)]="nuevaCategoria" />
+          </div>
+          
+          <!-- Boton para guardar la categoria -->
+          <button class="btn btn-brand w-100 rounded-pill py-2 fw-bold shadow-sm" (click)="guardarCategoria()" [disabled]="!nuevaCategoria.trim()">
+            <i class="bi bi-save-fill"></i> Guardar Categoría
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- COLUMNA DERECHA: Tabla de categorias existentes -->
+    <div class="col-12 col-lg-8">
+      <div class="app-card shadow-sm">
+        <!-- Encabezado con titulo y buscador -->
+        <div class="app-card-header d-flex justify-content-between align-items-center flex-wrap gap-3">
+          <h5><i class="bi bi-grid-fill text-brand me-2"></i>Categorías en el Sistema</h5>
+          <div class="d-flex align-items-center gap-2">
+            <!-- Campo de busqueda -->
+            <div class="input-group input-group-sm" style="max-width: 220px;">
+              <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+              <input type="text" class="form-control form-control-custom border-start-0" placeholder="Buscar categoría..."
+                [(ngModel)]="busqueda" (ngModelChange)="onBusqueda()">
+            </div>
+            <!-- Badge con total de categorias -->
+            <span class="badge rounded-pill bg-light text-dark border px-3 py-2 small fw-semibold">{{ categoriasFiltradas.length }} Ítems</span>
+          </div>
+        </div>
+        
+        <!-- Tabla de categorias -->
+        <div class="app-table-wrap">
+          <table class="table table-hover align-middle mb-0" aria-label="Listado de categorías">
+            <!-- Encabezados -->
+            <thead>
+              <tr>
+                <th style="width: 25%;"># ID</th>
+                <th style="width: 50%;">Nombre del Menú</th>
+                <th style="width: 25%;" class="text-center">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Ciclo for que recorre cada categoria -->
+              @for (cat of categoriasPaginadas; track cat.id_categoria) {
+                <tr>
+                  <!-- ID de la categoria -->
+                  <td><span class="fw-bold text-dark">#00{{ cat.id_categoria }}</span></td>
+                  <!-- Nombre de la categoria, editable inline -->
+                  <td>
+                    @if (categoriaEditando?.id_categoria === cat.id_categoria) {
+                      <!-- Modo edicion: input inline -->
+                      <div class="d-flex align-items-center gap-2">
+                        <input type="text" class="form-control form-control-custom form-control-sm" [(ngModel)]="nombreEditado" (keyup.enter)="guardarEdicion()" (keyup.escape)="cancelarEdicion()" autofocus>
+                        <button class="btn btn-sm btn-success rounded-pill px-2" (click)="guardarEdicion()" title="Guardar"><i class="bi bi-check-lg"></i></button>
+                        <button class="btn btn-sm btn-outline-secondary rounded-pill px-2" (click)="cancelarEdicion()" title="Cancelar"><i class="bi bi-x-lg"></i></button>
+                      </div>
+                    } @else {
+                      <!-- Modo lectura: nombre normal -->
+                      <span class="fw-semibold text-dark fs-6">{{ cat.nombre }}</span>
+                    }
+                  </td>
+                  <!-- Botones de acciones -->
+                  <td class="text-center">
+                    @if (categoriaEditando?.id_categoria !== cat.id_categoria) {
+                      <!-- Boton editar categoria -->
+                      <button class="btn-action me-1" (click)="iniciarEdicion(cat)" title="Editar categoría">
+                        <i class="bi bi-pencil-fill"></i>
+                      </button>
+                    }
+                    <!-- Boton eliminar categoria -->
+                    <button class="btn-action danger" (click)="borrarCategoria(cat.id_categoria)">
+                      <i class="bi bi-trash3-fill"></i>
+                    </button>
+                  </td>
+                </tr>
+              <!-- Mensaje cuando no hay categorias -->
+              } @empty {
+                <tr>
+                  <td colspan="3">
+                    <div class="app-empty-state py-5 text-center">
+                      <i class="bi bi-folder-x text-muted opacity-40 mb-2" style="font-size: 3rem;"></i>
+                      <p class="mb-0 fw-medium text-secondary">No hay categorías registradas.</p>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Paginacion de la tabla -->
+        @if (categoriasFiltradas.length > 0) {
+        <div class="card-footer bg-white border-top py-3 px-4 d-flex flex-wrap align-items-center justify-content-between gap-2">
+          <span class="small text-secondary fw-medium">Mostrando {{ categoriasPaginadas.length }} de {{ categoriasFiltradas.length }} categorías</span>
+          <!-- Navegacion de paginas -->
+          <nav aria-label="Paginación de categorías">
+            <ul class="pagination pagination-sm mb-0 rounded-2">
+              <li class="page-item" [class.disabled]="paginaActual === 1">
+                <a class="page-link px-2.5 py-1.5" (click)="cambiarPagina(paginaActual - 1); $event.preventDefault()" href="#">&#8249;</a>
+              </li>
+              @for (p of paginasArray; track p) {
+                <li class="page-item" [class.active]="paginaActual === p">
+                  <a class="page-link px-3 py-1.5" [class.bg-brand]="paginaActual === p"
+                    (click)="cambiarPagina(p); $event.preventDefault()" href="#">{{ p }}</a>
+                </li>
+              }
+              <li class="page-item" [class.disabled]="paginaActual === totalPaginas || totalPaginas === 0">
+                <a class="page-link px-2.5 py-1.5" (click)="cambiarPagina(paginaActual + 1); $event.preventDefault()" href="#">&#8250;</a>
+              </li>
+            </ul>
+          </nav>
+        </div>
+        }
+      </div>
+    </div>
+  </div>
+</section>

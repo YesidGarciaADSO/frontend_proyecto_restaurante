@@ -1,0 +1,181 @@
+<!-- ============================================= -->
+<!-- Template de Proveedores - Gestion de proveedores del restaurante -->
+<!-- ============================================= -->
+<section id="section-proveedores" class="app-module active" aria-label="Gestión de Proveedores">
+
+  <!-- Encabezado de la pagina -->
+  <header class="page-header mb-4">
+    <nav class="breadcrumb-nav d-flex align-items-center gap-2 small text-muted mb-2">
+      <i class="bi bi-house-door-fill text-brand"></i> Inicio
+      <i class="bi bi-chevron-right" style="font-size: 0.7rem;"></i>
+      <span class="fw-medium text-dark">Proveedores</span>
+    </nav>
+    <h2 class="page-title mb-1">Gestión de Proveedores</h2>
+    <p class="page-subtitle mb-0">Administra el directorio de proveedores y distribuidores del restaurante.</p>
+  </header>
+
+  <!-- Barra de herramientas con boton nuevo y buscador -->
+  <div class="page-toolbar d-flex align-items-center gap-2 mb-4 flex-wrap">
+    <button class="btn btn-brand rounded-pill px-3 py-1 fw-bold shadow-sm" (click)="abrirModal()">
+      <i class="bi bi-plus-circle fs-5"></i> Nuevo Proveedor
+    </button>
+    <div class="input-group input-group-sm" style="max-width: 280px;">
+      <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+      <input type="text" class="form-control form-control-custom border-start-0" placeholder="Buscar proveedor..."
+        [(ngModel)]="busqueda" (ngModelChange)="onBusqueda()">
+    </div>
+  </div>
+
+  <!-- Card principal con la tabla de proveedores -->
+  <div class="app-card shadow-sm">
+    <div class="app-card-header d-flex justify-content-between align-items-center">
+      <h5 class="mb-0"><i class="bi bi-truck text-brand me-2"></i>Lista de Proveedores</h5>
+      @if (proveedoresFiltrados.length > 0) {
+        <span class="badge rounded-pill bg-light text-dark border px-3 py-2 small fw-semibold">{{ proveedoresFiltrados.length }} proveedores</span>
+      }
+    </div>
+
+    <div class="app-table-wrap">
+      <table class="table align-middle table-hover mb-0">
+        <thead>
+          <tr>
+            <th class="ps-4" style="width: 18%;">Nombre</th>
+            <th style="width: 18%;">Contacto</th>
+            <th style="width: 15%;">Teléfono</th>
+            <th style="width: 20%;">Correo</th>
+            <th style="width: 14%;">Ciudad</th>
+            <th class="text-center pe-4" style="width: 15%;">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (prov of proveedoresPaginados; track prov.id_proveedor) {
+          <tr>
+            <td class="ps-4">
+              <div class="d-flex align-items-center gap-3">
+                <div class="avatar-sample d-flex align-items-center justify-content-center rounded-3 bg-light fs-4 shadow-sm"
+                  style="width: 40px; height: 40px; flex-shrink: 0;">
+                  <i class="bi bi-truck text-brand"></i>
+                </div>
+                <span class="fw-bold text-dark fs-6">{{ prov.nombre }}</span>
+              </div>
+            </td>
+            <td class="text-secondary fw-medium">{{ prov.contacto || '---' }}</td>
+            <td class="text-secondary fw-medium">{{ prov.telefono || '---' }}</td>
+            <td>
+              <span class="text-secondary fw-medium">
+                <i class="bi bi-envelope-fill text-muted opacity-50 me-2"></i>{{ prov.correo || '---' }}
+              </span>
+            </td>
+            <td>
+              <span class="badge bg-light text-secondary border px-3 py-1.5 rounded-pill fw-semibold small">
+                <i class="bi bi-building me-1 opacity-75"></i> {{ prov.ciudad || 'No definida' }}
+              </span>
+            </td>
+            <td class="text-center pe-4">
+              <div class="d-flex justify-content-center gap-2">
+                <button class="btn-action shadow-sm" (click)="editarProveedor(prov)" title="Editar proveedor">
+                  <i class="bi bi-pencil-square"></i>
+                </button>
+                <button class="btn-action danger shadow-sm" (click)="eliminarProveedor(prov.id_proveedor, prov.nombre)" title="Eliminar proveedor">
+                  <i class="bi bi-trash3"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="6">
+              <div class="app-loading-state py-5 text-center bg-white">
+                <i class="bi bi-truck text-muted opacity-50 mb-2" style="font-size: 2.5rem;"></i>
+                <h6 class="mb-1 text-dark fw-bold fs-5">Sin proveedores registrados</h6>
+                <p class="text-secondary small mb-0">No se encontraron proveedores en el directorio.</p>
+              </div>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (proveedoresFiltrados.length > 0) {
+    <div class="card-footer bg-white border-top py-3 px-4 d-flex flex-wrap align-items-center justify-content-between gap-2">
+      <span class="small text-secondary fw-medium">Mostrando {{ proveedoresPaginados.length }} de {{ proveedoresFiltrados.length }} proveedores</span>
+      <nav aria-label="Paginación de proveedores">
+        <ul class="pagination pagination-sm mb-0 rounded-2">
+          <li class="page-item" [class.disabled]="paginaActual === 1">
+            <a class="page-link px-2.5 py-1.5" (click)="cambiarPagina(paginaActual - 1); $event.preventDefault()" href="#">&#8249;</a>
+          </li>
+          @for (p of paginasArray; track p) {
+            <li class="page-item" [class.active]="paginaActual === p">
+              <a class="page-link px-3 py-1.5" [class.bg-brand]="paginaActual === p"
+                (click)="cambiarPagina(p); $event.preventDefault()" href="#">{{ p }}</a>
+            </li>
+          }
+          <li class="page-item" [class.disabled]="paginaActual === totalPaginas || totalPaginas === 0">
+            <a class="page-link px-2.5 py-1.5" (click)="cambiarPagina(paginaActual + 1); $event.preventDefault()" href="#">&#8250;</a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+    }
+  </div>
+</section>
+
+<!-- ============================================= -->
+<!-- MODAL: REGISTRAR / EDITAR PROVEEDOR -->
+<!-- ============================================= -->
+@if (modalAbierto) {
+<div class="modal fade show d-block" tabindex="-1" aria-hidden="true"
+  style="background: rgba(26, 29, 33, 0.4); backdrop-filter: blur(4px);">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg">
+
+      <div class="modal-header bg-white border-bottom border-light">
+        <h5 class="modal-title fw-bold text-dark d-flex align-items-center">
+          <i class="bi bi-truck text-brand me-2"></i> {{ idProveedorEditar > 0 ? 'Editar Proveedor' : 'Registrar Nuevo Proveedor' }}
+        </h5>
+        <button type="button" class="btn-close" (click)="cerrarModal()" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body bg-white py-4">
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="form-label text-secondary fw-bold small mb-1">Nombre del Proveedor</label>
+            <input type="text" class="form-control form-control-custom" [(ngModel)]="nuevoProveedor.nombre"
+              placeholder="Ej: Distribuidora ABC S.A.">
+          </div>
+          <div class="col-12">
+            <label class="form-label text-secondary fw-bold small mb-1">Persona de Contacto</label>
+            <input type="text" class="form-control form-control-custom" [(ngModel)]="nuevoProveedor.contacto"
+              placeholder="Ej: Juan Pérez">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label text-secondary fw-bold small mb-1">Teléfono</label>
+            <input type="text" class="form-control form-control-custom" [(ngModel)]="nuevoProveedor.telefono"
+              placeholder="Ej: 3001234567">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label text-secondary fw-bold small mb-1">Correo Electrónico</label>
+            <input type="email" class="form-control form-control-custom" [(ngModel)]="nuevoProveedor.correo"
+              placeholder="Ej: contacto@proveedor.com">
+          </div>
+          <div class="col-12">
+            <label class="form-label text-secondary fw-bold small mb-1">Ciudad</label>
+            <input type="text" class="form-control form-control-custom" [(ngModel)]="nuevoProveedor.ciudad"
+              placeholder="Ej: Ciénaga">
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer bg-white border-top border-light gap-2">
+        <button type="button" class="btn btn-light border rounded-pill px-4 fw-semibold text-secondary small"
+          (click)="cerrarModal()">Cancelar</button>
+        <button type="button" class="btn btn-brand rounded-pill px-4 fw-bold shadow-sm" (click)="guardarProveedor()">
+          <i class="bi bi-cloud-arrow-up-fill me-1"></i> {{ idProveedorEditar > 0 ? 'Actualizar' : 'Guardar' }}
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+}

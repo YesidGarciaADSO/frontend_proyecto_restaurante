@@ -1,0 +1,272 @@
+<!-- ============================================= -->
+<!-- Template de Domiciliario - Lista de pedidos de domicilio -->
+<!-- ============================================= -->
+<section id="section-domiciliario" class="app-module active" aria-label="Panel de Domicilios">
+
+  <!-- Encabezado de la pagina -->
+  <header class="page-header mb-4">
+    <nav class="breadcrumb-nav d-flex align-items-center gap-2 small text-muted mb-2">
+      <i class="bi bi-house-door-fill text-brand"></i> Inicio
+      <i class="bi bi-chevron-right" style="font-size: 0.7rem;"></i>
+      <span class="fw-medium text-dark">Reparto</span>
+    </nav>
+    <h2 class="page-title">Panel de Domicilios</h2>
+    <p class="page-subtitle mb-0">Consulta y gestiona los pedidos de domicilio del restaurante.</p>
+  </header>
+
+  <!-- Tarjetas de estadisticas resumidas -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-4">
+      <div class="mini-stat-card">
+        <div class="mini-stat-icon shadow-sm" style="background: rgba(255, 176, 32, 0.12); color: var(--stat-yellow); border-radius: 12px;">
+          <i class="bi bi-box-seam fs-5"></i>
+        </div>
+        <div>
+          <h4 class="mb-0 fw-bold text-dark fs-3">{{ totalPendientes }}</h4>
+          <span class="text-muted small fw-medium">En Cocina / Pendientes</span>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="mini-stat-card">
+        <div class="mini-stat-icon shadow-sm" style="background: rgba(255, 102, 54, 0.12); color: var(--stat-orange); border-radius: 12px;">
+          <i class="bi bi-bicycle fs-5"></i>
+        </div>
+        <div>
+          <h4 class="mb-0 fw-bold text-dark fs-3">{{ totalEnCamino }}</h4>
+          <span class="text-muted small fw-medium">En Ruta</span>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="mini-stat-card">
+        <div class="mini-stat-icon shadow-sm" style="background: rgba(34, 197, 94, 0.12); color: var(--stat-green); border-radius: 12px;">
+          <i class="bi bi-check2-all fs-5"></i>
+        </div>
+        <div>
+          <h4 class="mb-0 fw-bold text-dark fs-3">{{ totalEntregados }}</h4>
+          <span class="text-muted small fw-medium">Entregados</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Barra de filtros y busqueda -->
+  <div class="page-toolbar mb-4 justify-content-between d-flex align-items-center gap-3 flex-wrap">
+    <div class="filter-btn-group d-inline-flex flex-wrap shadow-sm">
+      <button type="button" [class]="filtroActivo === 'todos' ? 'btn active' : 'btn text-secondary fw-medium'" (click)="cambiarFiltro('todos')">
+        <i class="bi bi-collection me-1"></i> Todos
+      </button>
+      <button type="button" [class]="filtroActivo === 'pendiente' ? 'btn active' : 'btn text-secondary fw-medium'" (click)="cambiarFiltro('pendiente')">
+        <i class="bi bi-hourglass-split me-1"></i> Pendientes
+      </button>
+      <button type="button" [class]="filtroActivo === 'en_preparacion' ? 'btn active' : 'btn text-secondary fw-medium'" (click)="cambiarFiltro('en_preparacion')">
+        <i class="bi bi-box-seam me-1"></i> En Cocina
+      </button>
+      <button type="button" [class]="filtroActivo === 'en_camino' ? 'btn active' : 'btn text-secondary fw-medium'" (click)="cambiarFiltro('en_camino')">
+        <i class="bi bi-compass me-1"></i> En Ruta
+      </button>
+      <button type="button" [class]="filtroActivo === 'entregado' ? 'btn active' : 'btn text-secondary fw-medium'" (click)="cambiarFiltro('entregado')">
+        <i class="bi bi-check-circle me-1"></i> Entregados
+      </button>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <div class="input-group input-group-sm" style="max-width: 220px;">
+        <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+        <input type="text" class="form-control form-control-custom border-start-0" placeholder="Buscar..."
+          [(ngModel)]="busqueda" (ngModelChange)="onBusqueda()">
+      </div>
+      <button (click)="cargarPedidos()" title="Sincronizar ahora" class="btn btn-light border rounded-pill p-2 d-flex align-items-center justify-content-center shadow-sm" style="width: 38px; height: 38px;">
+          <i class="bi bi-arrow-clockwise fs-5"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Card principal con la tabla de pedidos de domicilio -->
+  <div class="app-card">
+    <div class="app-card-header">
+      <h5><i class="bi bi-journal-text me-2 text-brand"></i>Pedidos de Domicilio</h5>
+    </div>
+
+    @if (cargando) {
+      <div class="app-loading-state py-5 text-center">
+        <div class="spinner-border text-brand" role="status">
+          <span class="visually-hidden">Cargando pedidos...</span>
+        </div>
+        <p class="text-muted small mt-2 mb-0">Cargando pedidos de domicilio...</p>
+      </div>
+    } @else {
+      <div class="app-table-wrap">
+        <table class="table table-hover align-middle mb-0" aria-label="Pedidos de domicilio">
+          <thead>
+            <tr>
+              <th class="ps-4"># Pedido</th>
+              <th>Cliente</th>
+              <th>Dirección de Entrega</th>
+              <th>Total</th>
+              <th>Método Pago</th>
+              <th>Estado</th>
+              <th class="text-end">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (ped of pedidosPaginados; track ped.id_pedido) {
+              <tr>
+                <td class="ps-4"><span class="fw-bold text-brand fw-mono">#{{ ped.id_pedido | number:'3.0-0' }}</span></td>
+                <td class="fw-medium text-dark">
+                  <i class="bi bi-person-circle me-2 text-muted opacity-75"></i>{{ ped.nombre_cliente }}
+                </td>
+                <td>
+                  <span class="text-truncate text-secondary fw-medium" style="max-width: 250px; display: inline-block;" [title]="ped.direccion_entrega || 'Sin dirección'">
+                    {{ ped.direccion_entrega || 'Sin dirección' }}
+                  </span>
+                </td>
+                <td><strong class="text-success fw-bold fw-mono">${{ ped.total | number:'1.0-0' }}</strong></td>
+                <td class="text-capitalize fw-medium text-secondary">
+                  <i class="bi bi-credit-card-2-front me-2 opacity-75"></i>{{ ped.metodo_pago || 'Efectivo' }}
+                </td>
+                <td>
+                  <span class="badge text-capitalize" [ngClass]="{
+                    'pending': ped.estado === 'pendiente',
+                    'confirmed': ped.estado === 'en_preparacion',
+                    'delivered': ped.estado === 'entregado'
+                  }" [ngStyle]="ped.estado === 'en_camino' ? { 'background-color': '#FFF0EA', 'color': '#FF6636', 'border': '1px solid #FFD3C4' } : {}">
+                    {{ ped.estado?.replace('_', ' ') || 'Sin Estado' }}
+                  </span>
+                </td>
+                <td class="text-end">
+                  <div class="d-flex justify-content-end gap-2">
+                    <button class="btn-action shadow-sm" (click)="verDetalles(ped)" title="Ver detalles completos">
+                      <i class="bi bi-eye-fill"></i>
+                    </button>
+                    @if (ped.estado === 'en_preparacion') {
+                      <button class="btn btn-warning text-white rounded-pill px-3 fw-semibold shadow-sm border-0" style="background-color: var(--stat-yellow) !important;" (click)="iniciarRuta(ped.id_pedido)" title="Iniciar Ruta">
+                        <i class="bi bi-play-circle-fill fs-6"></i> Iniciar Ruta
+                      </button>
+                    }
+                    @if (ped.estado === 'en_camino') {
+                      <button class="btn btn-success text-white rounded-pill px-3 fw-semibold shadow-sm border-0" style="background-color: var(--stat-green) !important;" (click)="confirmarEntrega(ped.id_pedido)" title="Confirmar Entrega">
+                        <i class="bi bi-check-circle-fill fs-6"></i> Entregado
+                      </button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="7">
+                  <div class="app-empty-state py-5">
+                    <i class="bi bi-box2-heart text-muted opacity-50 mb-2" style="font-size: 3rem;"></i>
+                    <p class="mb-0 fw-medium">No hay pedidos de domicilio registrados.</p>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      @if (pedidosFiltrados.length > 0) {
+      <div class="card-footer bg-white border-top py-3 px-4 d-flex flex-wrap align-items-center justify-content-between gap-2">
+        <span class="small text-secondary fw-medium">Mostrando {{ pedidosPaginados.length }} de {{ pedidosFiltrados.length }} pedidos</span>
+        <nav aria-label="Paginación de domicilios">
+          <ul class="pagination pagination-sm mb-0 rounded-2">
+            <li class="page-item" [class.disabled]="paginaActual === 1">
+              <a class="page-link px-2.5 py-1.5" (click)="cambiarPagina(paginaActual - 1); $event.preventDefault()" href="#">&#8249;</a>
+            </li>
+            @for (p of paginasArray; track p) {
+              <li class="page-item" [class.active]="paginaActual === p">
+                <a class="page-link px-3 py-1.5" [class.bg-brand]="paginaActual === p"
+                  (click)="cambiarPagina(p); $event.preventDefault()" href="#">{{ p }}</a>
+              </li>
+            }
+            <li class="page-item" [class.disabled]="paginaActual === totalPaginas || totalPaginas === 0">
+              <a class="page-link px-2.5 py-1.5" (click)="cambiarPagina(paginaActual + 1); $event.preventDefault()" href="#">&#8250;</a>
+            </li>
+          </ul>
+        </nav>
+      </div>
+      }
+    }
+  </div>
+</section>
+
+<!-- ============================================= -->
+<!-- MODAL: DETALLES DEL PEDIDO SELECCIONADO -->
+<!-- ============================================= -->
+@if (pedidoSeleccionado) {
+  <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background: rgba(26, 29, 33, 0.4); backdrop-filter: blur(4px);">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 shadow-lg">
+
+        <div class="modal-header bg-white">
+          <h5 class="modal-title fw-bold text-dark d-flex align-items-center">
+            <i class="bi bi-box-seam-fill me-2 text-brand"></i>
+            Orden de Entrega #{{ pedidoSeleccionado.id_pedido | number:'3.0-0' }}
+          </h5>
+          <button type="button" class="btn-close" (click)="cerrarModal()"></button>
+        </div>
+
+        <div class="modal-body bg-white">
+          <div class="row g-4">
+            <div class="col-12 border-bottom border-light pb-3">
+              <label class="text-muted small fw-bold text-uppercase tracking-wider mb-1 d-block">Cliente Receptor</label>
+              <span class="fw-bold text-dark fs-5 d-flex align-items-center">
+                <i class="bi bi-person-fill text-brand me-2"></i>{{ pedidoSeleccionado.nombre_cliente }}
+              </span>
+            </div>
+
+            <div class="col-12 border-bottom border-light pb-3">
+              <label class="text-muted small fw-bold text-uppercase tracking-wider mb-2 d-block">Dirección de Destino</label>
+              <span class="fw-semibold text-secondary d-block bg-light p-2 rounded-3 fs-6">
+                <i class="bi bi-geo-alt-fill text-brand me-2"></i>
+                {{ pedidoSeleccionado.direccion_entrega || 'No especificada' }}
+              </span>
+            </div>
+
+            <div class="col-6">
+              <label class="text-muted small fw-bold text-uppercase tracking-wider mb-1 d-block">Total a Recaudar</label>
+              <span class="fw-bold text-success fs-3">${{ pedidoSeleccionado.total | number:'1.0-0' }}</span>
+            </div>
+
+            <div class="col-6">
+              <label class="text-muted small fw-bold text-uppercase tracking-wider mb-1 d-block">Método de Pago</label>
+              <div>
+                <span class="badge bg-light text-dark border px-3 py-2 text-capitalize fw-semibold mt-1 rounded-3">
+                  <i class="bi bi-wallet2 me-2 text-brand"></i> {{ pedidoSeleccionado.metodo_pago || 'Efectivo' }}
+                </span>
+              </div>
+            </div>
+
+            <div class="col-6">
+              <label class="text-muted small fw-bold text-uppercase tracking-wider mb-1 d-block">Tipo Servicio</label>
+              <span class="text-capitalize fw-bold text-dark fs-6">
+                <i class="bi bi-bicycle me-1 opacity-50"></i> {{ pedidoSeleccionado.tipo || 'Domicilio' }}
+              </span>
+            </div>
+
+            <div class="col-6">
+              <label class="text-muted small fw-bold text-uppercase tracking-wider mb-1 d-block">Estado de Envío</label>
+              <span class="text-capitalize fw-bold text-brand fs-6 d-block mt-1">{{ pedidoSeleccionado.estado?.replace('_', ' ') }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer d-flex gap-2 border-0">
+          <button type="button" class="btn btn-light border rounded-pill px-4 fw-semibold text-secondary small" (click)="cerrarModal()">Cerrar</button>
+          @if (pedidoSeleccionado.estado === 'en_preparacion') {
+            <button type="button" class="btn btn-warning text-white flex-grow-1 border-0 rounded-pill fw-bold" style="background-color: var(--stat-yellow) !important;" (click)="iniciarRuta(pedidoSeleccionado.id_pedido)">
+              <i class="bi bi-bicycle me-2"></i> Salir al Destino
+            </button>
+          }
+          @if (pedidoSeleccionado.estado === 'en_camino') {
+            <button type="button" class="btn btn-success text-white flex-grow-1 border-0 rounded-pill fw-bold" style="background-color: var(--stat-green) !important;" (click)="confirmarEntrega(pedidoSeleccionado.id_pedido)">
+              <i class="bi bi-check-circle me-2"></i> Confirmar Entrega Realizada
+            </button>
+          }
+        </div>
+
+      </div>
+    </div>
+  </div>
+}

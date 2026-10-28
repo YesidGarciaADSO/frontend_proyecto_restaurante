@@ -5,7 +5,8 @@ import { Observable } from 'rxjs';
 @Injectable({ providedIn: 'root' })
 export class CiudadService {
   private http = inject(HttpClient);
-  private url = 'http://localhost/proyectos/restaurante/backend/controladores/ciudad.php';
+// private url = 'http://localhost/proyectos/restaurante/backend/controladores/ciudad.php';
+private url = 'https://fastfood-os.site.je/backend/controladores/ciudad.php';
 
   consulta(): Observable<any[]> {
     return this.http.get<any[]>(`${this.url}?control=consulta`);

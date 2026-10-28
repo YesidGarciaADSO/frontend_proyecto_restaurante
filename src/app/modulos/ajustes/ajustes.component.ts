@@ -1,6 +1,7 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { AjustesService } from '../../services/ajustes.service';
 
 @Component({
   selector: 'app-ajustes',
@@ -9,6 +10,8 @@ import { FormsModule } from '@angular/forms';
   templateUrl: './ajustes.component.html'
 })
 export class AjustesComponent implements OnInit {
+  private ajustesService = inject(AjustesService);
+  private cdr = inject(ChangeDetectorRef);
 
   public mensajeGuardado: string = '';
 
@@ -31,27 +34,41 @@ export class AjustesComponent implements OnInit {
     moneda: 'COP'
   };
 
-  constructor(private cdr: ChangeDetectorRef) {}
-
   ngOnInit(): void {
+    const config = this.ajustesService.obtenerAjustes();
+    this.alertaSonora = config.alertaSonora;
+    this.impresionAutomatica = config.impresionAutomatica;
+    this.tiendaAbierta = config.tiendaAbierta;
+    this.negocio = { ...config.negocio };
+    this.finanzas = { ...config.finanzas };
     this.cdr.detectChanges();
   }
 
   guardarAjustes(): void {
-    this.mensajeGuardado = 'Ajustes guardados correctamente.';
+    this.ajustesService.guardarAjustes({
+      alertaSonora: this.alertaSonora,
+      impresionAutomatica: this.impresionAutomatica,
+      tiendaAbierta: this.tiendaAbierta,
+      negocio: { ...this.negocio },
+      finanzas: { ...this.finanzas }
+    });
+    this.mensajeGuardado = 'Ajustes guardados y aplicados en el sistema.';
     this.cdr.detectChanges();
-    setTimeout(() => this.mensajeGuardado = '', 3000);
+    setTimeout(() => (this.mensajeGuardado = ''), 3000);
   }
 
   toggleTienda(): void {
     this.tiendaAbierta = !this.tiendaAbierta;
+    this.guardarAjustes();
   }
 
   toggleAlertaSonora(): void {
     this.alertaSonora = !this.alertaSonora;
+    this.guardarAjustes();
   }
 
   toggleImpresion(): void {
     this.impresionAutomatica = !this.impresionAutomatica;
+    this.guardarAjustes();
   }
 }

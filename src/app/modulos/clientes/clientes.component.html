@@ -78,9 +78,11 @@
                   <button type="button" (click)="seleccionarClienteParaEditar(cli)" class="btn-action shadow-sm" title="Editar ficha de cliente">
                     <i class="bi bi-pencil-fill"></i>
                   </button>
-                  <button type="button" (click)="eliminarCliente(cli.id_cliente)" class="btn-action danger shadow-sm" title="Eliminar del registro">
-                    <i class="bi bi-trash3-fill"></i>
-                  </button>
+                  @if (puedeEliminarCliente) {
+                    <button type="button" (click)="eliminarCliente(cli.id_cliente)" class="btn-action danger shadow-sm" title="Eliminar del registro">
+                      <i class="bi bi-trash3-fill"></i>
+                    </button>
+                  }
                 </div>
               </td>
             </tr>

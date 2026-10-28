@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ClienteService } from '../../services/cliente.service';
 import { CiudadService } from '../../services/ciudad.service';
 import { DepartamentoService } from '../../services/departamento.service';
+import { LoginService } from '../../services/login.service';
 
 @Component({
   selector: 'app-clientes',
@@ -16,7 +17,13 @@ export class ClientesComponent implements OnInit {
   private clienteService = inject(ClienteService);
   private ciudadService = inject(CiudadService);
   private departamentoService = inject(DepartamentoService);
+  private authService = inject(LoginService);
   private cdr = inject(ChangeDetectorRef);
+
+  get puedeEliminarCliente(): boolean {
+    const rol = this.authService.obtenerRol().toLowerCase();
+    return rol.includes('admin') || rol.includes('cajero');
+  }
 
   // Lista clientes
   listaClientes: any[] = [];

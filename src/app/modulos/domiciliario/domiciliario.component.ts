@@ -14,14 +14,14 @@ export class DomiciliarioComponent implements OnInit {
   private pedidoService = inject(PedidoService);
   private cdr = inject(ChangeDetectorRef);
 
-  // Lista pedidos
+  // Lista pedidos despachados para reparto
   public listaPedidos: any[] = [];
   // Pedido seleccionado
   public pedidoSeleccionado: any = null;
   // Cargando
   public cargando: boolean = true;
-  // Filtro activo
-  public filtroActivo: string = 'todos';
+  // Filtro activo: por defecto muestra los que acaban de despachar ("en_camino")
+  public filtroActivo: string = 'en_camino';
   // Busqueda
   public busqueda: string = '';
   // Paginacion
@@ -33,13 +33,19 @@ export class DomiciliarioComponent implements OnInit {
     this.cargarPedidos();
   }
 
-  // Cargar pedidos
+  // Cargar pedidos de domicilio que ya fueron despachados por cocina (en_camino o entregado)
   cargarPedidos(): void {
     this.cargando = true;
     this.pedidoService.consulta().subscribe({
       next: (res: any[]) => {
-        const domicilios = Array.isArray(res) ? res.filter(p => p.tipo === 'domicilio') : [];
-        this.listaPedidos = domicilios;
+        const domiciliosDespachados = Array.isArray(res)
+          ? res.filter(
+              p =>
+                p.tipo === 'domicilio' &&
+                (p.estado === 'en_camino' || p.estado === 'entregado')
+            )
+          : [];
+        this.listaPedidos = domiciliosDespachados;
         this.cargando = false;
         this.cdr.detectChanges();
       },
@@ -86,7 +92,7 @@ export class DomiciliarioComponent implements OnInit {
     return Array.from({ length: this.totalPaginas }, (_, i) => i + 1);
   }
 
-  // Total en camino
+  // Total despachados / en camino para entregar
   get totalEnCamino(): number {
     return this.listaPedidos.filter(p => p.estado === 'en_camino').length;
   }
@@ -96,9 +102,9 @@ export class DomiciliarioComponent implements OnInit {
     return this.listaPedidos.filter(p => p.estado === 'entregado').length;
   }
 
-  // Total pendientes
-  get totalPendientes(): number {
-    return this.listaPedidos.filter(p => p.estado === 'pendiente' || p.estado === 'en_preparacion').length;
+  // Total general de despachos
+  get totalDespachos(): number {
+    return this.listaPedidos.length;
   }
 
   // Cambiar pagina
@@ -119,21 +125,7 @@ export class DomiciliarioComponent implements OnInit {
     this.paginaActual = 1;
   }
 
-  // Iniciar ruta
-  iniciarRuta(idPedido: number): void {
-    const payload = { estado: 'en_camino' };
-    this.pedidoService.cambiarEstado(idPedido, payload).subscribe({
-      next: () => {
-        this.cargarPedidos();
-        if (this.pedidoSeleccionado && this.pedidoSeleccionado.id_pedido === idPedido) {
-          this.pedidoSeleccionado.estado = 'en_camino';
-        }
-      },
-      error: (err) => console.error('Error al iniciar ruta:', err)
-    });
-  }
-
-  // Confirmar entrega
+  // Confirmar entrega (Exclusivo del domiciliario al entregar el pedido al cliente)
   confirmarEntrega(idPedido: number): void {
     if (confirm('¿Confirmas que el pedido ha sido entregado al cliente y el pago fue recibido?')) {
       const payload = { estado: 'entregado' };

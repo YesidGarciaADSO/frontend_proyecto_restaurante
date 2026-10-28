@@ -1,4 +1,4 @@
-<!-- Dashboard simplificado - 4 cards de KPIs + tabla de ultimos pedidos -->
+<!-- Dashboard con 4 cards de KPIs, 2 graficas Chart.js y tabla de ultimos pedidos -->
 
 <section class="app-module" aria-label="Dashboard">
   <header class="page-header mb-4">
@@ -8,7 +8,7 @@
       <span class="fw-medium text-dark">Dashboard</span>
     </nav>
     <h2 class="page-title mb-1">Dashboard</h2>
-    <p class="text-secondary mb-0" style="font-size: 0.9rem;">Resumen general del restaurante</p>
+    <p class="text-secondary mb-0" style="font-size: 0.9rem;">Resumen general e indicadores en tiempo real del restaurante</p>
   </header>
 
   <!-- Tarjetas de estadisticas -->
@@ -17,7 +17,7 @@
       <div class="stat-card stat-red">
         <div class="stat-icon"><i class="bi bi-currency-dollar"></i></div>
         <div class="stat-value">${{ totalVentas | number:'1.0-0' }}</div>
-        <div class="stat-label">Total Ventas</div>
+        <div class="stat-label">Ventas Efectivas</div>
       </div>
     </div>
     <div class="col-md-3">
@@ -31,14 +31,39 @@
       <div class="stat-card stat-orange">
         <div class="stat-icon"><i class="bi bi-people"></i></div>
         <div class="stat-value">{{ totalClientes }}</div>
-        <div class="stat-label">Total Clientes</div>
+        <div class="stat-label">Clientes Activos</div>
       </div>
     </div>
     <div class="col-md-3">
       <div class="stat-card stat-green">
         <div class="stat-icon"><i class="bi bi-check-circle"></i></div>
-        <div class="stat-value">{{ pedidosRecientes.length }}</div>
-        <div class="stat-label">Ultimos Pedidos</div>
+        <div class="stat-value">{{ pedidosEntregados }}</div>
+        <div class="stat-label">Pedidos Entregados</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Graficas estadisticas con Chart.js -->
+  <div class="row g-3 mb-4">
+    <div class="col-12 col-lg-7">
+      <div class="app-card shadow-sm h-100">
+        <div class="app-card-header">
+          <h5><i class="bi bi-bar-chart-fill text-brand me-2"></i>Ingresos por Método de Pago</h5>
+        </div>
+        <div class="app-card-body" style="height: 270px;">
+          <canvas #chartMetodos></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-lg-5">
+      <div class="app-card shadow-sm h-100">
+        <div class="app-card-header">
+          <h5><i class="bi bi-pie-chart-fill text-brand me-2"></i>Distribución de Pedidos por Estado</h5>
+        </div>
+        <div class="app-card-body" style="height: 270px;">
+          <canvas #chartEstados></canvas>
+        </div>
       </div>
     </div>
   </div>
@@ -46,7 +71,7 @@
   <!-- Tabla de ultimos pedidos -->
   <div class="app-card shadow-sm">
     <div class="app-card-header">
-      <h5><i class="bi bi-receipt text-brand me-2"></i>Ultimos Pedidos</h5>
+      <h5><i class="bi bi-receipt text-brand me-2"></i>Últimos Pedidos</h5>
     </div>
     <div class="app-table-wrap">
       <table class="table align-middle table-hover mb-0">
@@ -75,17 +100,18 @@
                   </span>
                 }
               </td>
-              <td class="fw-bold text-dark">${{ (ped.total || 0) | number:'1.0-0' }}</td>
+              <td class="fw-bold text-dark fw-mono">${{ (ped.total || 0) | number:'1.0-0' }}</td>
               <td>
-                <span class="badge rounded-pill px-2 py-1 fw-bold text-capitalize border"
+                <span class="status-badge text-capitalize"
                   [ngClass]="{
-                    'bg-danger-subtle text-danger border-danger-subtle': ped.estado === 'pendiente',
-                    'bg-primary-subtle text-primary border-primary-subtle': ped.estado === 'en_preparacion',
-                    'bg-warning-subtle text-warning border-warning-subtle': ped.estado === 'en_camino',
-                    'bg-success-subtle text-success border-success-subtle': ped.estado === 'entregado',
-                    'bg-light text-muted border-secondary-subtle': ped.estado === 'cancelado'
+                    'status-pendiente': ped.estado === 'pendiente',
+                    'status-cocina': ped.estado === 'en_preparacion' || ped.estado === 'confirmado',
+                    'status-camino': ped.estado === 'en_camino',
+                    'status-entregado': ped.estado === 'entregado',
+                    'status-cancelado': ped.estado === 'cancelado'
                   }">
-                  {{ ped.estado?.replace('_', ' ') || 'Sin Estado' }}
+                  <span class="dot-status"></span>
+                  {{ ped.estado === 'en_preparacion' ? 'En Cocina' : (ped.estado?.replace('_', ' ') || 'Pendiente') }}
                 </span>
               </td>
             </tr>

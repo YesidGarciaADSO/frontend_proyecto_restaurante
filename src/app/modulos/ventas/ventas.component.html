@@ -3,42 +3,98 @@
 <!-- ============================================= -->
 <section id="section-ventas" class="app-module active" aria-label="Historial de Ventas e Ingresos">
 
-  <!-- Encabezado de la pagina -->
-  <header class="page-header mb-4">
-    <nav class="breadcrumb-nav d-flex align-items-center gap-2 small text-muted mb-2">
+  <!-- Cabecera Universal -->
+  <header class="page-header">
+    <nav class="breadcrumb-nav d-flex align-items-center gap-2 mb-2">
       <i class="bi bi-house-door-fill text-brand"></i> Inicio
-      <i class="bi bi-chevron-right" style="font-size: 0.7rem;"></i>
-      <span class="fw-medium text-dark">Ventas</span>
+      <i class="bi bi-chevron-right"></i>
+      <span class="fw-medium text-dark">Historial de Ventas</span>
     </nav>
     <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
       <div>
-        <h2 class="page-title mb-1">Historial de Ventas</h2>
-        <p class="page-subtitle mb-0">Audita el registro contable, ingresos consolidados y el flujo de caja de comandas despachadas.</p>
+        <h2 class="page-title">Historial de Ventas y Facturación</h2>
+        <p class="page-subtitle">Audita el registro contable, productos vendidos, ingresos consolidados y el flujo de caja.</p>
       </div>
-      <button class="btn btn-brand rounded-pill px-3 py-1 fw-bold shadow-sm d-flex align-items-center gap-2" (click)="cargarHistorialVentas()">
-        <i class="bi bi-arrow-clockwise fs-5"></i> Actualizar Historial
-      </button>
+      <div class="d-flex align-items-center gap-2 flex-wrap">
+        <button class="btn-export excel" (click)="descargarExcel()" title="Descargar reporte en Excel (CSV)">
+          <i class="bi bi-file-earmark-excel-fill"></i> Excel
+        </button>
+        <button class="btn-export pdf" (click)="descargarPDF()" title="Descargar o imprimir reporte en PDF">
+          <i class="bi bi-file-earmark-pdf-fill"></i> PDF
+        </button>
+        <button class="btn btn-brand rounded-pill shadow-sm" (click)="cargarHistorialVentas()">
+          <i class="bi bi-arrow-clockwise"></i> Actualizar
+        </button>
+      </div>
     </div>
   </header>
 
+  <!-- Micro-Tarjetas KPI -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-4">
+      <div class="mini-stat-card">
+        <div class="mini-stat-icon" style="background: #d1fae5; color: var(--stat-green);">
+          <i class="bi bi-cash-stack"></i>
+        </div>
+        <div>
+          <h4 class="mb-0 fw-bold text-dark fs-4 fw-mono">${{ totalRecaudadoVista | number:'1.0-0' }}</h4>
+          <span class="text-muted small fw-medium">Ingresos Efectivos en Vista</span>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="mini-stat-card">
+        <div class="mini-stat-icon" style="background: rgba(214, 35, 0, 0.1); color: var(--stat-red);">
+          <i class="bi bi-receipt"></i>
+        </div>
+        <div>
+          <h4 class="mb-0 fw-bold text-dark fs-4 fw-mono">{{ totalFacturasEfectivas }}</h4>
+          <span class="text-muted small fw-medium">Facturas Efectivas Registradas</span>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="mini-stat-card">
+        <div class="mini-stat-icon" style="background: #dbeafe; color: var(--stat-blue);">
+          <i class="bi bi-graph-up-arrow"></i>
+        </div>
+        <div>
+          <h4 class="mb-0 fw-bold text-dark fs-4 fw-mono">${{ ticketPromedioVista | number:'1.0-0' }}</h4>
+          <span class="text-muted small fw-medium">Ticket Promedio por Orden</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Spinner de carga mientras se obtienen los datos -->
   @if (cargando) {
-    <div class="app-card shadow-sm p-5 text-center bg-white rounded-3">
+    <div class="app-card p-5 text-center">
       <div class="spinner-border text-brand mb-3" role="status" style="width: 2.5rem; height: 2.5rem;">
         <span class="visually-hidden">Calculando arqueo...</span>
       </div>
-      <p class="text-secondary mb-0 fw-medium fs-6">Sincronizando transacciones financieras de la base de datos...</p>
+      <p class="text-secondary mb-0 fw-medium">Sincronizando transacciones financieras...</p>
     </div>
   } @else {
 
     <!-- Card principal con la tabla de ventas -->
-    <div class="app-card shadow-sm">
-      <div class="app-card-header d-flex justify-content-between align-items-center flex-wrap gap-3">
-        <h5 class="mb-0"><i class="bi bi-cash-stack me-2 text-brand"></i>Transacciones Registradas</h5>
-        <div class="d-flex align-items-center gap-2">
-          <div class="input-group input-group-sm" style="max-width: 280px;">
-            <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
-            <input type="text" class="form-control form-control-custom border-start-0" placeholder="Buscar por cliente, factura..."
+    <div class="app-card">
+      <div class="app-card-header">
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+          <h5><i class="bi bi-journal-check me-2 text-brand"></i>Transacciones Registradas</h5>
+          <span class="badge rounded-pill bg-light text-secondary border px-2.5 py-1 small fw-semibold">
+            {{ ventasFiltradas.length }} facturas
+          </span>
+        </div>
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+          <select class="form-select form-select-sm" style="width: auto;"
+            [(ngModel)]="filtroEstadoVenta" (ngModelChange)="onBusqueda()">
+            <option value="efectivas">Ventas Efectivas (Sin canceladas)</option>
+            <option value="entregado">Solo Entregadas</option>
+            <option value="todos">Todas (Incluye canceladas)</option>
+          </select>
+          <div class="input-group input-group-sm search-input-group">
+            <span class="input-group-text"><i class="bi bi-search"></i></span>
+            <input type="text" class="form-control" placeholder="Buscar factura, cliente, producto..."
               [(ngModel)]="busqueda" (ngModelChange)="onBusqueda()">
           </div>
         </div>
@@ -48,12 +104,14 @@
         <table class="table table-hover align-middle mb-0">
           <thead>
             <tr>
-              <th class="ps-4" style="width: 15%;">Factura #</th>
-              <th style="width: 20%;">Fecha / Hora</th>
-              <th style="width: 25%;">Cliente</th>
-              <th style="width: 15%;">Tipo de Entrega</th>
-              <th style="width: 15%;">Método de Pago</th>
-              <th class="text-end pe-4" style="width: 10%;">Total Cobrado</th>
+              <th class="ps-4" style="width: 11%;">Factura #</th>
+              <th style="width: 15%;">Fecha / Hora</th>
+              <th style="width: 16%;">Cliente</th>
+              <th style="width: 24%;">Productos Vendidos</th>
+              <th style="width: 11%;">Modalidad</th>
+              <th style="width: 11%;">Método Pago</th>
+              <th class="text-end" style="width: 8%;">Total (COP)</th>
+              <th class="text-center pe-4" style="width: 6%;">Ticket</th>
             </tr>
           </thead>
           <tbody>
@@ -66,37 +124,57 @@
                   <i class="bi bi-calendar3 text-muted me-1.5 opacity-75"></i>{{ venta.fecha | date:'dd/MM/yyyy hh:mm a' }}
                 </td>
                 <td>
-                  <span class="fw-bold text-dark d-block">
+                  <span class="fw-semibold text-dark d-block">
                     {{ venta.cliente || 'Cliente #' + (venta.fo_cliente || 'N/A') }}
                   </span>
                 </td>
                 <td>
+                  @if (venta.productos && venta.productos.length > 0) {
+                    <div class="d-flex flex-wrap gap-1">
+                      @for (prod of venta.productos; track $index) {
+                        <span class="badge bg-light text-dark border px-2 py-1 rounded-2 fw-medium small">
+                          <strong class="text-brand fw-mono">{{ prod.cantidad }}x</strong> {{ prod.nombre }}
+                        </span>
+                      }
+                    </div>
+                  } @else {
+                    <span class="text-secondary small fw-medium">
+                      <i class="bi bi-bag-check text-brand me-1"></i>{{ obtenerTextoProductos(venta) }}
+                    </span>
+                  }
+                </td>
+                <td>
                   @if (venta.tipo === 'domicilio') {
-                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2.5 py-1.5 rounded-pill fw-semibold small">
+                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2.5 py-1 rounded-pill fw-semibold small">
                       <i class="bi bi-bicycle me-1"></i> Domicilio
                     </span>
                   } @else {
-                    <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle px-2.5 py-1.5 rounded-pill fw-semibold small">
+                    <span class="badge bg-light text-secondary border px-2.5 py-1 rounded-pill fw-semibold small">
                       <i class="bi bi-shop me-1"></i> {{ (venta.tipo || 'Local') | titlecase }}
                     </span>
                   }
                 </td>
                 <td>
-                  <span class="badge bg-light text-secondary border px-2.5 py-1.5 rounded-3 fw-medium small d-inline-flex align-items-center">
+                  <span class="badge bg-light text-secondary border px-2.5 py-1 rounded-3 fw-medium small d-inline-flex align-items-center">
                     <i class="bi bi-credit-card-2-back-fill text-muted opacity-75 me-1.5"></i> {{ venta.metodo_pago || 'Efectivo' }}
                   </span>
                 </td>
-                <td class="text-end pe-4">
-                  <span class="fw-bold text-success fs-6">${{ (venta.total || 0) | number:'1.0-0' }}</span>
+                <td class="price-col text-success fw-mono">
+                  ${{ (venta.total || 0) | number:'1.0-0' }}
+                </td>
+                <td class="text-center pe-4">
+                  <button class="btn-action" (click)="imprimirFactura(venta)" title="Imprimir Factura / Ticket POS 80mm">
+                    <i class="bi bi-printer-fill"></i>
+                  </button>
                 </td>
               </tr>
             } @empty {
               <tr>
-                <td colspan="6">
-                  <div class="app-loading-state py-5 text-center bg-white">
-                    <i class="bi bi-cash-stack text-muted opacity-50 mb-2" style="font-size: 2.5rem;"></i>
-                    <h6 class="mb-1 text-dark fw-bold fs-5">Sin registros de ventas</h6>
-                    <p class="text-secondary small mb-0">No se encontraron transacciones para este periodo.</p>
+                <td colspan="8">
+                  <div class="app-empty-state">
+                    <i class="bi bi-cash-stack"></i>
+                    <h6 class="mb-1 text-dark fw-bold">Sin registros de ventas</h6>
+                    <p class="small mb-0">No se encontraron transacciones para el criterio seleccionado.</p>
                   </div>
                 </td>
               </tr>

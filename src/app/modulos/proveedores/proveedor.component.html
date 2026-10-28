@@ -3,36 +3,46 @@
 <!-- ============================================= -->
 <section id="section-proveedores" class="app-module active" aria-label="Gestión de Proveedores">
 
-  <!-- Encabezado de la pagina -->
-  <header class="page-header mb-4">
-    <nav class="breadcrumb-nav d-flex align-items-center gap-2 small text-muted mb-2">
+  <!-- Cabecera Universal -->
+  <header class="page-header">
+    <nav class="breadcrumb-nav d-flex align-items-center gap-2 mb-2">
       <i class="bi bi-house-door-fill text-brand"></i> Inicio
-      <i class="bi bi-chevron-right" style="font-size: 0.7rem;"></i>
+      <i class="bi bi-chevron-right"></i>
       <span class="fw-medium text-dark">Proveedores</span>
     </nav>
-    <h2 class="page-title mb-1">Gestión de Proveedores</h2>
-    <p class="page-subtitle mb-0">Administra el directorio de proveedores y distribuidores del restaurante.</p>
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+      <div>
+        <h2 class="page-title">Directorio de Proveedores</h2>
+        <p class="page-subtitle">Administra el directorio de proveedores, distribuidores de insumos y contactos comerciales.</p>
+      </div>
+      <div class="d-flex align-items-center gap-2 flex-wrap">
+        <button class="btn-export excel" (click)="descargarExcel()" title="Descargar reporte de proveedores en Excel">
+          <i class="bi bi-file-earmark-excel-fill"></i> Excel
+        </button>
+        <button class="btn-export pdf" (click)="descargarPDF()" title="Descargar reporte de proveedores en PDF">
+          <i class="bi bi-file-earmark-pdf-fill"></i> PDF
+        </button>
+        <button class="btn btn-brand rounded-pill shadow-sm" (click)="abrirModal()">
+          <i class="bi bi-plus-circle-fill"></i> Nuevo Proveedor
+        </button>
+      </div>
+    </div>
   </header>
 
-  <!-- Barra de herramientas con boton nuevo y buscador -->
-  <div class="page-toolbar d-flex align-items-center gap-2 mb-4 flex-wrap">
-    <button class="btn btn-brand rounded-pill px-3 py-1 fw-bold shadow-sm" (click)="abrirModal()">
-      <i class="bi bi-plus-circle fs-5"></i> Nuevo Proveedor
-    </button>
-    <div class="input-group input-group-sm" style="max-width: 280px;">
-      <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
-      <input type="text" class="form-control form-control-custom border-start-0" placeholder="Buscar proveedor..."
-        [(ngModel)]="busqueda" (ngModelChange)="onBusqueda()">
-    </div>
-  </div>
-
   <!-- Card principal con la tabla de proveedores -->
-  <div class="app-card shadow-sm">
-    <div class="app-card-header d-flex justify-content-between align-items-center">
-      <h5 class="mb-0"><i class="bi bi-truck text-brand me-2"></i>Lista de Proveedores</h5>
-      @if (proveedoresFiltrados.length > 0) {
-        <span class="badge rounded-pill bg-light text-dark border px-3 py-2 small fw-semibold">{{ proveedoresFiltrados.length }} proveedores</span>
-      }
+  <div class="app-card">
+    <div class="app-card-header">
+      <div class="d-flex align-items-center gap-2">
+        <h5><i class="bi bi-truck text-brand me-2"></i>Lista de Proveedores</h5>
+        @if (proveedoresFiltrados.length > 0) {
+          <span class="badge rounded-pill bg-light text-secondary border px-2.5 py-1 small fw-semibold">{{ proveedoresFiltrados.length }} proveedores</span>
+        }
+      </div>
+      <div class="input-group input-group-sm search-input-group">
+        <span class="input-group-text"><i class="bi bi-search"></i></span>
+        <input type="text" class="form-control" placeholder="Buscar proveedor, ciudad, contacto..."
+          [(ngModel)]="busqueda" (ngModelChange)="onBusqueda()">
+      </div>
     </div>
 
     <div class="app-table-wrap">

@@ -3,6 +3,8 @@ import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProductoService } from '../../services/producto.service';
 import { CategoriaService } from '../../services/categoria.service';
+import { ProveedorService } from '../../services/proveedor.service';
+import { ReporteService } from '../../services/reporte.service';
 
 @Component({
   selector: 'app-productos',
@@ -13,17 +15,28 @@ import { CategoriaService } from '../../services/categoria.service';
 export class ProductosComponent implements OnInit {
   private productoService = inject(ProductoService);
   private categoriaService = inject(CategoriaService);
+  private proveedorService = inject(ProveedorService);
+  private reporteService = inject(ReporteService);
   private cdr = inject(ChangeDetectorRef);
 
   public listaProductos: any[] = [];
   public listaCategorias: any[] = [];
+  public listaProveedores: any[] = [];
   public busqueda: string = '';
   public paginaActual: number = 1;
   public itemsPorPagina: number = 8;
 
   public modalAbierto: boolean = false;
 
-  public nuevoProducto: any = { nombre: '', descripcion: '', precio: 0, fo_categoria: '', stock: 0, activo: 1 };
+  public nuevoProducto: any = {
+    nombre: '',
+    descripcion: '',
+    precio: 0,
+    fo_categoria: '',
+    stock: 0,
+    activo: 1,
+    proveedor: ''
+  };
 
   ngOnInit(): void {
     this.cargarDatos();
@@ -36,6 +49,14 @@ export class ProductosComponent implements OnInit {
         this.cdr.detectChanges();
       },
       error: (err: any) => console.error('Error al cargar categorias:', err),
+    });
+
+    this.proveedorService.consulta().subscribe({
+      next: (provs: any[]) => {
+        this.listaProveedores = Array.isArray(provs) ? provs : [];
+        this.cdr.detectChanges();
+      },
+      error: (err: any) => console.error('Error al cargar proveedores:', err),
     });
 
     this.productoService.consulta().subscribe({
@@ -53,7 +74,8 @@ export class ProductosComponent implements OnInit {
     return this.listaProductos.filter(p =>
       (p.nombre || '').toLowerCase().includes(term) ||
       (p.nombre_categoria || '').toLowerCase().includes(term) ||
-      (p.descripcion || '').toLowerCase().includes(term)
+      (p.descripcion || '').toLowerCase().includes(term) ||
+      (p.proveedor || '').toLowerCase().includes(term)
     );
   }
 
@@ -81,7 +103,15 @@ export class ProductosComponent implements OnInit {
   }
 
   abrirModal(): void {
-    this.nuevoProducto = { nombre: '', descripcion: '', precio: 0, fo_categoria: '', stock: 0, activo: 1 };
+    this.nuevoProducto = {
+      nombre: '',
+      descripcion: '',
+      precio: 0,
+      fo_categoria: '',
+      stock: 0,
+      activo: 1,
+      proveedor: ''
+    };
     this.modalAbierto = true;
   }
 
@@ -91,7 +121,12 @@ export class ProductosComponent implements OnInit {
 
   guardarProducto(): void {
     let catId = parseInt(this.nuevoProducto.fo_categoria);
-    if (isNaN(catId)) { catId = 1; }
+    if (isNaN(catId)) {
+      const catEncontrada = this.listaCategorias.find(
+        c => c.nombre === this.nuevoProducto.nombre_categoria
+      );
+      catId = catEncontrada ? parseInt(catEncontrada.id_categoria) : 1;
+    }
 
     const prod = this.nuevoProducto;
     const datosAEnviar = {
@@ -101,7 +136,8 @@ export class ProductosComponent implements OnInit {
       precio: parseFloat(prod.precio?.toString()) || 0,
       fo_categoria: catId,
       stock: parseInt(prod.stock?.toString()) || 0,
-      activo: 1,
+      activo: prod.activo !== undefined ? Number(prod.activo) : 1,
+      proveedor: prod.proveedor || ''
     };
 
     if (datosAEnviar.id_producto) {
@@ -123,13 +159,35 @@ export class ProductosComponent implements OnInit {
   }
 
   editarProducto(prod: any) {
-    this.nuevoProducto = { ...prod };
+    let catId = prod.fo_categoria;
+    if (!catId && prod.nombre_categoria) {
+      const cat = this.listaCategorias.find(c => c.nombre === prod.nombre_categoria);
+      if (cat) catId = cat.id_categoria;
+    }
+    this.nuevoProducto = { ...prod, fo_categoria: catId || 1, proveedor: prod.proveedor || '' };
     this.modalAbierto = true;
   }
 
-  cambiarEstadoProducto(id: number, activo: boolean) {
+  cambiarEstadoProducto(prod: any, activo: boolean) {
     const nuevoEstado = activo ? 1 : 0;
-    this.productoService.editar(id, { activo: nuevoEstado }).subscribe({
+    let catId = parseInt(prod.fo_categoria);
+    if (isNaN(catId)) {
+      const cat = this.listaCategorias.find(c => c.nombre === prod.nombre_categoria);
+      catId = cat ? parseInt(cat.id_categoria) : 1;
+    }
+
+    // Enviamos el objeto completo del producto para que el servidor remoto no pierda ningun campo
+    const payload = {
+      nombre: prod.nombre,
+      descripcion: prod.descripcion || '',
+      precio: parseFloat(prod.precio) || 0,
+      stock: parseInt(prod.stock) || 0,
+      fo_categoria: catId,
+      activo: nuevoEstado,
+      proveedor: prod.proveedor || ''
+    };
+
+    this.productoService.editar(prod.id_producto, payload).subscribe({
       next: () => this.cargarDatos(),
       error: (err: any) => console.error('Error al cambiar estado:', err)
     });
@@ -143,5 +201,41 @@ export class ProductosComponent implements OnInit {
       next: () => this.cargarDatos(),
       error: (err: any) => console.error('Error al eliminar:', err)
     });
+  }
+
+  descargarExcel(): void {
+    const encabezados = ['SKU', 'Producto', 'Descripcion', 'Categoria', 'Precio Venta', 'Stock', 'Estado', 'Proveedor'];
+    const filas = this.productosFiltrados.map(p => [
+      `#PRD-${p.id_producto}`,
+      p.nombre || '',
+      p.descripcion || 'Sin descripción',
+      p.nombre_categoria || 'General',
+      p.precio || 0,
+      p.stock || 0,
+      p.stock > 5 ? 'Disponible' : p.stock > 0 ? 'Stock bajo' : 'Agotado',
+      p.proveedor || 'Distribuidor Local'
+    ]);
+    this.reporteService.exportarExcelCSV('Reporte_Productos', encabezados, filas);
+  }
+
+  descargarPDF(): void {
+    const encabezados = ['SKU', 'Producto', 'Categoría', 'Precio', 'Stock', 'Estado', 'Proveedor'];
+    const totalUnidades = this.productosFiltrados.reduce((acc, p) => acc + parseInt(p.stock || 0, 10), 0);
+    const filas = this.productosFiltrados.map(p => [
+      `#PRD-${p.id_producto}`,
+      p.nombre || '',
+      p.nombre_categoria || 'General',
+      `$${Number(p.precio || 0).toLocaleString('es-CO')}`,
+      `${p.stock || 0} und.`,
+      p.stock > 5 ? 'Disponible' : p.stock > 0 ? 'Stock bajo' : 'Agotado',
+      p.proveedor || 'Distribuidor Local'
+    ]);
+    this.reporteService.exportarPDF(
+      'Catálogo e Inventario de Productos',
+      'Listado general de productos, precios y existencias en bodega',
+      encabezados,
+      filas,
+      `Total de referencias: ${this.productosFiltrados.length} | Total unidades en inventario: ${totalUnidades} und.`
+    );
   }
 }

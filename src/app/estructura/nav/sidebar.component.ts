@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { SidebarService } from '../../services/sidebar.service';
 import { LoginService } from '../../services/login.service';
+import { AjustesService } from '../../services/ajustes.service';
 
 @Component({
   selector: 'app-sidebar',
@@ -13,9 +14,49 @@ import { LoginService } from '../../services/login.service';
 })
 export class SidebarComponent {
   public sidebar = inject(SidebarService);
-  private authService = inject(LoginService);
+  public authService = inject(LoginService);
+  private ajustesService = inject(AjustesService);
 
   constructor(private eRef: ElementRef, private router: Router) {}
+
+  get nombreRestaurante(): string {
+    return this.ajustesService.obtenerAjustes().negocio.nombre || 'Restaurante';
+  }
+
+  get rolActual(): string {
+    return this.authService.obtenerRol();
+  }
+
+  puedeVer(ruta: string): boolean {
+    return this.authService.tienePermisoRuta(ruta);
+  }
+
+  get tieneSeccionAtencion(): boolean {
+    return (
+      this.puedeVer('dashboard') ||
+      this.puedeVer('pedidos') ||
+      this.puedeVer('domiciliario') ||
+      this.puedeVer('clientes')
+    );
+  }
+
+  get tieneSeccionCatalogo(): boolean {
+    return (
+      this.puedeVer('productos') ||
+      this.puedeVer('categorias') ||
+      this.puedeVer('proveedores') ||
+      this.puedeVer('inventario')
+    );
+  }
+
+  get tieneSeccionAdministracion(): boolean {
+    return (
+      this.puedeVer('ventas') ||
+      this.puedeVer('pagos') ||
+      this.puedeVer('usuarios') ||
+      this.puedeVer('ajustes')
+    );
+  }
 
   close() {
     this.sidebar.close();

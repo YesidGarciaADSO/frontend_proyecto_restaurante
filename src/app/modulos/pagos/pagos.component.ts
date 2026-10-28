@@ -2,6 +2,7 @@ import { Component, OnInit, ChangeDetectorRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PagoService } from '../../services/pago.service';
+import { PedidoService } from '../../services/pedido.service';
 
 @Component({
   selector: 'app-pagos',
@@ -12,6 +13,7 @@ import { PagoService } from '../../services/pago.service';
 export class PagosComponent implements OnInit {
   // Servicios
   private pagoService = inject(PagoService);
+  private pedidoService = inject(PedidoService);
   private cdr = inject(ChangeDetectorRef);
 
   // Lista pagos
@@ -38,9 +40,37 @@ export class PagosComponent implements OnInit {
     this.cargando = true;
     this.pagoService.consulta().subscribe({
       next: (data: any[]) => {
-        this.listaPagos = Array.isArray(data) ? data : [];
-        this.cargando = false;
-        this.cdr.detectChanges();
+        if (Array.isArray(data) && data.length > 0) {
+          this.listaPagos = data;
+          this.cargando = false;
+          this.cdr.detectChanges();
+        } else {
+          // Respaldo automatico desde pedidos si la tabla pago en el servidor esta vacia
+          this.pedidoService.consulta().subscribe({
+            next: (pedidos: any[]) => {
+              this.listaPagos = (Array.isArray(pedidos) ? pedidos : []).map(p => ({
+                id_pago: p.id_pedido,
+                fo_pedido: p.id_pedido,
+                monto: parseFloat(p.total || 0),
+                metodo: (p.metodo_pago || 'efectivo').toLowerCase(),
+                estado:
+                  p.estado === 'entregado'
+                    ? 'aprobado'
+                    : p.estado === 'cancelado'
+                    ? 'rechazado'
+                    : 'pendiente',
+                fecha: p.fecha
+              }));
+              this.cargando = false;
+              this.cdr.detectChanges();
+            },
+            error: () => {
+              this.listaPagos = [];
+              this.cargando = false;
+              this.cdr.detectChanges();
+            }
+          });
+        }
       },
       error: (err) => {
         console.error('Error al cargar pagos:', err);

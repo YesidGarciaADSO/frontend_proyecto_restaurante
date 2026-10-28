@@ -1,51 +1,60 @@
 <!-- ============================================= -->
-<!-- Template de Productos - Catalogo e inventario de productos del restaurante -->
+<!-- Template de Productos - Catálogo Maestro del Menú -->
 <!-- ============================================= -->
-<section id="section-productos" class="app-module active" aria-label="Productos e Inventario">
+<section id="section-productos" class="app-module active" aria-label="Catálogo de Productos">
 
-  <!-- Encabezado de la pagina -->
-  <header class="page-header mb-4">
-    <nav class="breadcrumb-nav d-flex align-items-center gap-2 small text-muted mb-2">
+  <!-- Cabecera Universal -->
+  <header class="page-header">
+    <nav class="breadcrumb-nav d-flex align-items-center gap-2 mb-2">
       <i class="bi bi-house-door-fill text-brand"></i> Inicio
-      <i class="bi bi-chevron-right" style="font-size: 0.7rem;"></i>
-      <span class="fw-medium text-dark">Productos</span>
+      <i class="bi bi-chevron-right"></i>
+      <span class="fw-medium text-dark">Menú de Productos</span>
     </nav>
-    <h2 class="page-title mb-1">Productos e Inventario</h2>
-    <p class="page-subtitle mb-0">Administra el menú digital, precios al consumidor y los niveles críticos de stock en bodega.</p>
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+      <div>
+        <h2 class="page-title">Catálogo Maestro del Menú</h2>
+        <p class="page-subtitle">Administra la carta digital, precios al consumidor, proveedores y disponibilidad en punto de venta.</p>
+      </div>
+      <div class="d-flex align-items-center gap-2 flex-wrap">
+        <button class="btn-export excel" (click)="descargarExcel()" title="Exportar catálogo a Excel (CSV)">
+          <i class="bi bi-file-earmark-excel-fill"></i> Excel
+        </button>
+        <button class="btn-export pdf" (click)="descargarPDF()" title="Exportar catálogo a PDF">
+          <i class="bi bi-file-earmark-pdf-fill"></i> PDF
+        </button>
+        <button class="btn btn-brand rounded-pill shadow-sm" (click)="abrirModal()">
+          <i class="bi bi-plus-circle-fill"></i> Nuevo Producto
+        </button>
+      </div>
+    </div>
   </header>
 
-  <!-- Barra de herramientas con boton nuevo y buscador -->
-  <div class="page-toolbar d-flex align-items-center gap-2 mb-4 flex-wrap">
-    <button class="btn btn-brand rounded-pill px-3 py-1 fw-bold shadow-sm" (click)="abrirModal()">
-      <i class="bi bi-plus-circle fs-5"></i> Nuevo Producto
-    </button>
-    <div class="input-group input-group-sm" style="max-width: 280px;">
-      <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
-      <input type="text" class="form-control form-control-custom border-start-0" placeholder="Buscar producto o categoría..."
-        [(ngModel)]="busqueda" (ngModelChange)="onBusqueda()">
-    </div>
-  </div>
-
   <!-- Card principal con la tabla de productos -->
-  <div class="app-card shadow-sm" id="table-productos">
-    <div class="app-card-header d-flex justify-content-between align-items-center">
-      <h5 class="mb-0"><i class="bi bi-box-seam text-brand me-2"></i>Catálogo de Productos</h5>
-      @if (productosFiltrados.length > 0) {
-        <span class="badge rounded-pill bg-light text-dark border px-3 py-2 small fw-semibold">{{ productosFiltrados.length }} productos</span>
-      }
+  <div class="app-card" id="table-productos">
+    <div class="app-card-header">
+      <div class="d-flex align-items-center gap-2">
+        <h5><i class="bi bi-box-seam text-brand me-2"></i>Carta de Productos</h5>
+        @if (productosFiltrados.length > 0) {
+          <span class="badge rounded-pill bg-light text-secondary border px-2.5 py-1 small fw-semibold">{{ productosFiltrados.length }} ítems</span>
+        }
+      </div>
+      <div class="input-group input-group-sm search-input-group">
+        <span class="input-group-text"><i class="bi bi-search"></i></span>
+        <input type="text" class="form-control" placeholder="Buscar producto, categoría, proveedor..."
+          [(ngModel)]="busqueda" (ngModelChange)="onBusqueda()">
+      </div>
     </div>
 
     <div class="app-table-wrap">
       <table class="table align-middle table-hover mb-0">
         <thead>
           <tr>
-            <th class="ps-4" style="width: 20%;">Producto</th>
-            <th style="width: 20%;">Descripción</th>
-            <th style="width: 12%;">Categoría</th>
-            <th style="width: 12%;">Precio Venta</th>
-            <th style="width: 12%;">Existencias (Stock)</th>
-            <th style="width: 12%;">Estado Logístico</th>
-            <th style="width: 12%;">Proveedor</th>
+            <th class="ps-4" style="width: 24%;">Producto</th>
+            <th style="width: 22%;">Descripción</th>
+            <th style="width: 13%;">Categoría</th>
+            <th style="width: 14%;">Proveedor</th>
+            <th style="width: 10%;">Disponibilidad</th>
+            <th class="text-end" style="width: 10%;">Precio (COP)</th>
             <th class="text-center pe-4" style="width: 10%;">Acciones</th>
           </tr>
         </thead>
@@ -54,77 +63,65 @@
           <tr>
             <td class="ps-4">
               <div class="d-flex align-items-center gap-3">
-                <div class="avatar-sample d-flex align-items-center justify-content-center rounded-3 bg-light fs-4 shadow-sm"
-                  style="width: 40px; height: 40px; flex-shrink: 0;">
+                <div class="avatar-sample d-flex align-items-center justify-content-center rounded-3 bg-light fs-5 border"
+                  style="width: 38px; height: 38px; flex-shrink: 0;">
                   {{ prod.nombre_categoria === 'Bebidas' ? '🥤' : '🍔' }}
                 </div>
                 <div>
-                  <span class="fw-bold text-dark d-block fs-6 mb-0">{{ prod.nombre }}</span>
-                  <small class="text-muted fw-mono" style="font-size: 0.75rem;">SKU: #PRD-{{ prod.id_producto }}</small>
+                  <span class="fw-bold text-dark d-block mb-0">{{ prod.nombre }}</span>
+                  <small class="text-muted fw-mono" style="font-size: 0.72rem;">#PRD-{{ prod.id_producto }} · Stock: {{ prod.stock || 0 }}</small>
                 </div>
               </div>
             </td>
             <td>
-              <span class="text-secondary small" [title]="prod.descripcion">{{ prod.descripcion || 'Sin descripción' }}</span>
+              <span class="text-secondary small text-truncate d-inline-block" style="max-width: 240px;" [title]="prod.descripcion">
+                {{ prod.descripcion || 'Sin descripción registrada' }}
+              </span>
             </td>
             <td>
-              <span class="text-secondary fw-semibold small bg-light px-2.5 py-1 rounded">{{ prod.nombre_categoria || 'General' }}</span>
-            </td>
-            <td>
-              <span class="fw-bold text-dark fs-6">${{ prod.precio | number:'1.0-0' }}</span>
-            </td>
-            <td>
-              <span class="fw-bold d-block mb-1"
-                [ngClass]="{'text-success': prod.stock > 5, 'text-warning': prod.stock <= 5 && prod.stock > 0, 'text-danger': !prod.stock || prod.stock == 0}">
-                {{ prod.stock || 0 }} und.
-              </span>
-              <div class="progress rounded-pill bg-light" style="height: 5px; width: 85%;">
-                <div class="progress-bar rounded-pill transition-all" role="progressbar"
-                  [style.width.%]="prod.stock > 0 ? (prod.stock > 5 ? 100 : 35) : 0"
-                  [ngClass]="{'bg-success': prod.stock > 5, 'bg-warning': prod.stock <= 5 && prod.stock > 0, 'bg-danger': !prod.stock || prod.stock == 0}">
-                </div>
-              </div>
-            </td>
-            <td>
-              @if (prod.stock > 5) {
-              <span class="badge bg-success-subtle text-success border border-success-subtle px-2.5 py-1.5 rounded-pill fw-semibold small d-inline-flex align-items-center">
-                <span class="dot-status bg-success me-1.5"></span> Disponible
-              </span>
-              } @else if (prod.stock <= 5 && prod.stock > 0) {
-              <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2.5 py-1.5 rounded-pill fw-semibold small d-inline-flex align-items-center">
-                <span class="dot-status bg-warning me-1.5"></span> Stock bajo
-              </span>
-              } @else {
-              <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2.5 py-1.5 rounded-pill fw-semibold small d-inline-flex align-items-center">
-                <span class="dot-status bg-danger me-1.5"></span> Agotado
-              </span>
-              }
+              <span class="badge bg-light text-secondary border px-2.5 py-1 rounded-pill fw-semibold small">{{ prod.nombre_categoria || 'General' }}</span>
             </td>
             <td>
               <span class="text-secondary small fw-medium"><i class="bi bi-truck text-muted opacity-75 me-1.5"></i>{{ prod.proveedor || 'Distribuidor Local' }}</span>
             </td>
+            <td>
+              @if (prod.activo == 1 && prod.stock > 0) {
+                <span class="status-badge status-entregado">
+                  <span class="dot-status"></span> En Carta
+                </span>
+              } @else if (prod.stock <= 0) {
+                <span class="status-badge status-cancelado">
+                  <span class="dot-status"></span> Sin Stock
+                </span>
+              } @else {
+                <span class="badge bg-light text-muted border px-2.5 py-1 rounded-pill small">Pausado</span>
+              }
+            </td>
+            <td class="price-col text-dark fw-mono">
+              ${{ prod.precio | number:'1.0-0' }}
+            </td>
             <td class="text-center pe-4">
-              <div class="d-flex justify-content-center align-items-center gap-2">
-                <button class="btn-action shadow-sm" (click)="editarProducto(prod)" title="Editar ficha técnica">
+              <div class="d-inline-flex align-items-center gap-1.5">
+                <button class="btn-action" (click)="editarProducto(prod)" title="Editar ficha técnica">
                   <i class="bi bi-pencil-square"></i>
                 </button>
-                <button class="btn-action danger shadow-sm" (click)="eliminarProducto(prod.id_producto, prod.nombre)" title="Eliminar producto">
+                <button class="btn-action danger" (click)="eliminarProducto(prod.id_producto, prod.nombre)" title="Eliminar producto">
                   <i class="bi bi-trash3"></i>
                 </button>
-                <div class="form-check form-switch m-0 d-inline-flex align-items-center">
+                <div class="form-check form-switch m-0 ms-1 d-inline-flex align-items-center" title="Activar / Pausar en el menú">
                   <input #chk class="form-check-input custom-switch-brand" type="checkbox" role="switch"
-                    [checked]="prod.activo == 1" (change)="cambiarEstadoProducto(prod.id_producto, chk.checked)">
+                    [checked]="prod.activo == 1" (change)="cambiarEstadoProducto(prod, chk.checked)">
                 </div>
               </div>
             </td>
           </tr>
           } @empty {
           <tr>
-            <td colspan="8">
-              <div class="app-loading-state py-5 text-center bg-white">
-                <i class="bi bi-box-seam text-muted opacity-50 mb-2" style="font-size: 2.5rem;"></i>
-                <h6 class="mb-1 text-dark fw-bold fs-5">Menú de productos vacío</h6>
-                <p class="text-secondary small mb-0">No se encontraron artículos en el catálogo.</p>
+            <td colspan="7">
+              <div class="app-empty-state">
+                <i class="bi bi-box-seam"></i>
+                <h6 class="mb-1 text-dark fw-bold">Catálogo vacío</h6>
+                <p class="small mb-0">No se encontraron productos coincidentes.</p>
               </div>
             </td>
           </tr>
@@ -197,7 +194,7 @@
               placeholder="Ej: Hamburguesa doble carne con queso, lechuga y tomate" rows="3"></textarea>
           </div>
 
-          <div class="col-12">
+          <div class="col-md-6">
             <label class="form-label text-secondary fw-bold small mb-1">Precio al Público (COP)</label>
             <div class="input-group">
               <span class="input-group-text bg-light text-muted border-0 fw-bold">$</span>
@@ -206,10 +203,20 @@
             </div>
           </div>
 
-          <div class="col-12">
+          <div class="col-md-6">
             <label class="form-label text-secondary fw-bold small mb-1">Stock Actual</label>
             <input type="number" class="form-control form-control-custom" [(ngModel)]="nuevoProducto.stock"
               placeholder="0" min="0">
+          </div>
+
+          <div class="col-12">
+            <label class="form-label text-secondary fw-bold small mb-1">Proveedor / Distribuidor</label>
+            <select class="form-select form-control-custom" [(ngModel)]="nuevoProducto.proveedor">
+              <option value="">Distribuidor Local (Por defecto)</option>
+              @for (prov of listaProveedores; track prov.id_proveedor) {
+                <option [value]="prov.nombre">{{ prov.nombre }}</option>
+              }
+            </select>
           </div>
         </div>
       </div>

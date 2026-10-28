@@ -1,56 +1,119 @@
 <!-- ============================================= -->
-<!-- Template de Inventario - Control de stock de productos -->
+<!-- Template de Inventario - Control de Existencias y Alertas de Stock -->
 <!-- ============================================= -->
 <section id="section-inventario" class="app-module active" aria-label="Control de Inventario">
 
-  <!-- Encabezado de la pagina -->
-  <header class="page-header mb-4">
-    <nav class="breadcrumb-nav d-flex align-items-center gap-2 small text-muted mb-2">
+  <!-- Cabecera Universal -->
+  <header class="page-header">
+    <nav class="breadcrumb-nav d-flex align-items-center gap-2 mb-2">
       <i class="bi bi-house-door-fill text-brand"></i> Inicio
-      <i class="bi bi-chevron-right" style="font-size: 0.7rem;"></i>
-      <span class="fw-medium text-dark">Inventario</span>
+      <i class="bi bi-chevron-right"></i>
+      <span class="fw-medium text-dark">Control de Stock</span>
     </nav>
-    <h2 class="page-title mb-1">Control de Inventario</h2>
-    <p class="page-subtitle mb-0">Consulta y actualiza el nivel de stock de cada producto del restaurante.</p>
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+      <div>
+        <h2 class="page-title">Control de Stock y Alertas de Almacén</h2>
+        <p class="page-subtitle">Monitorea existencias críticas, realiza ajustes rápidos de entrada/salida y exporta el balance físico.</p>
+      </div>
+      <div class="d-flex align-items-center gap-2 flex-wrap">
+        <button class="btn-export excel" (click)="descargarExcel()" title="Descargar balance de inventario en Excel">
+          <i class="bi bi-file-earmark-excel-fill"></i> Excel
+        </button>
+        <button class="btn-export pdf" (click)="descargarPDF()" title="Descargar balance de inventario en PDF">
+          <i class="bi bi-file-earmark-pdf-fill"></i> PDF
+        </button>
+        <button (click)="cargarInventario()" class="btn btn-brand rounded-pill shadow-sm">
+          <i class="bi bi-arrow-clockwise"></i> Sincronizar Bodega
+        </button>
+      </div>
+    </div>
   </header>
 
-  <!-- Barra de herramientas con buscador -->
-  <div class="page-toolbar d-flex align-items-center gap-2 mb-4 flex-wrap">
-    <div class="input-group input-group-sm" style="max-width: 280px;">
-      <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
-      <input type="text" class="form-control form-control-custom border-start-0" placeholder="Buscar producto o categoría..."
+  <!-- Micro-Tarjetas KPI de Almacén -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-4">
+      <div class="mini-stat-card">
+        <div class="mini-stat-icon" style="background: #d1fae5; color: var(--stat-green);">
+          <i class="bi bi-boxes"></i>
+        </div>
+        <div>
+          <h4 class="mb-0 fw-bold text-dark fs-4 fw-mono">{{ totalUnidadesBodega }} und.</h4>
+          <span class="text-muted small fw-medium">Existencias Totales en Bodega</span>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="mini-stat-card">
+        <div class="mini-stat-icon" style="background: #fef3c7; color: var(--stat-yellow);">
+          <i class="bi bi-exclamation-triangle-fill"></i>
+        </div>
+        <div>
+          <h4 class="mb-0 fw-bold text-dark fs-4 fw-mono">{{ totalStockCritico }}</h4>
+          <span class="text-muted small fw-medium">Alertas de Stock Bajo (≤ 5 und.)</span>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="mini-stat-card">
+        <div class="mini-stat-icon" style="background: #ffe4e6; color: var(--stat-red);">
+          <i class="bi bi-x-octagon-fill"></i>
+        </div>
+        <div>
+          <h4 class="mb-0 fw-bold text-dark fs-4 fw-mono">{{ totalAgotados }}</h4>
+          <span class="text-muted small fw-medium">Productos Agotados (0 und.)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Barra de filtros de alerta y buscador -->
+  <div class="page-toolbar justify-content-between">
+    <div class="filter-btn-group d-inline-flex flex-wrap shadow-sm">
+      <button type="button" [class]="filtroNivel === 'todos' ? 'btn active' : 'btn text-secondary fw-medium'" (click)="cambiarFiltroNivel('todos')">
+        Todos ({{ listaInventario.length }})
+      </button>
+      <button type="button" [class]="filtroNivel === 'critico' ? 'btn active' : 'btn text-secondary fw-medium'" (click)="cambiarFiltroNivel('critico')">
+        <i class="bi bi-exclamation-circle me-1"></i> Stock Bajo ({{ totalStockCritico }})
+      </button>
+      <button type="button" [class]="filtroNivel === 'agotado' ? 'btn active' : 'btn text-secondary fw-medium'" (click)="cambiarFiltroNivel('agotado')">
+        <i class="bi bi-slash-circle me-1"></i> Agotados ({{ totalAgotados }})
+      </button>
+      <button type="button" [class]="filtroNivel === 'optimo' ? 'btn active' : 'btn text-secondary fw-medium'" (click)="cambiarFiltroNivel('optimo')">
+        <i class="bi bi-check-circle me-1"></i> Nivel Óptimo
+      </button>
+    </div>
+
+    <div class="input-group input-group-sm search-input-group">
+      <span class="input-group-text"><i class="bi bi-search"></i></span>
+      <input type="text" class="form-control" placeholder="Buscar por nombre o categoría..."
         [(ngModel)]="busqueda" (ngModelChange)="onBusqueda()">
     </div>
-    <button (click)="cargarInventario()" class="btn btn-light border rounded-pill p-2 d-flex align-items-center justify-content-center shadow-sm" style="width: 38px; height: 38px;" title="Sincronizar">
-      <i class="bi bi-arrow-clockwise fs-5"></i>
-    </button>
   </div>
 
   <!-- Card principal con la tabla de inventario -->
-  <div class="app-card shadow-sm">
-    <div class="app-card-header d-flex justify-content-between align-items-center">
-      <h5 class="mb-0"><i class="bi bi-box-seam text-brand me-2"></i>Stock de Productos</h5>
-      @if (inventarioFiltrado.length > 0) {
-        <span class="badge rounded-pill bg-light text-dark border px-3 py-2 small fw-semibold">{{ inventarioFiltrado.length }} productos</span>
-      }
+  <div class="app-card">
+    <div class="app-card-header">
+      <h5><i class="bi bi-clipboard-data text-brand me-2"></i>Auditoría de Existencias</h5>
+      <span class="badge rounded-pill bg-light text-secondary border px-2.5 py-1 small fw-semibold">{{ inventarioFiltrado.length }} referencias</span>
     </div>
 
     @if (cargando) {
-      <div class="app-loading-state py-5 text-center bg-white">
+      <div class="app-loading-state">
         <div class="spinner-border text-brand" role="status">
           <span class="visually-hidden">Cargando...</span>
         </div>
-        <p class="text-muted small mt-2 mb-0">Cargando inventario...</p>
+        <p class="text-muted small mt-2 mb-0">Consultando existencias de almacén...</p>
       </div>
     } @else {
       <div class="app-table-wrap">
         <table class="table align-middle table-hover mb-0">
           <thead>
             <tr>
-              <th class="ps-4" style="width: 30%;">Producto</th>
-              <th style="width: 25%;">Categoría</th>
-              <th style="width: 20%;">Stock Actual</th>
-              <th class="text-center pe-4" style="width: 25%;">Acciones</th>
+              <th class="ps-4" style="width: 28%;">Producto / SKU</th>
+              <th style="width: 16%;">Categoría</th>
+              <th style="width: 22%;">Nivel de Abastecimiento</th>
+              <th style="width: 16%;">Estado de Alerta</th>
+              <th class="text-center pe-4" style="width: 18%;">Ajuste Rápido / Manual</th>
             </tr>
           </thead>
           <tbody>
@@ -58,51 +121,82 @@
             <tr>
               <td class="ps-4">
                 <div class="d-flex align-items-center gap-3">
-                  <div class="avatar-sample d-flex align-items-center justify-content-center rounded-3 bg-light fs-4 shadow-sm"
-                    style="width: 40px; height: 40px; flex-shrink: 0;">
+                  <div class="avatar-sample d-flex align-items-center justify-content-center rounded-3 bg-light border"
+                    style="width: 38px; height: 38px; flex-shrink: 0;">
                     <i class="bi bi-box-seam text-brand"></i>
                   </div>
-                  <span class="fw-bold text-dark fs-6">{{ item.nombre }}</span>
+                  <div>
+                    <span class="fw-bold text-dark d-block">{{ item.nombre }}</span>
+                    <small class="text-muted fw-mono" style="font-size: 0.72rem;">#PRD-{{ item.id_producto }}</small>
+                  </div>
                 </div>
               </td>
               <td>
-                <span class="text-secondary fw-semibold small bg-light px-2.5 py-1 rounded">{{ item.nombre_categoria || 'General' }}</span>
+                <span class="badge bg-light text-secondary border px-2.5 py-1 rounded-pill fw-semibold small">{{ item.nombre_categoria || 'General' }}</span>
               </td>
               <td>
                 @if (editandoId === item.id_producto) {
-                  <!-- Modo edicion: input inline para cambiar stock -->
-                  <div class="d-flex align-items-center gap-2">
-                    <input type="number" class="form-control form-control-custom form-control-sm" style="max-width: 100px;"
+                  <!-- Modo edicion manual -->
+                  <div class="d-flex align-items-center gap-1.5">
+                    <input type="number" class="form-control form-control-sm fw-mono" style="max-width: 90px;"
                       [(ngModel)]="stockEditado" min="0" (keyup.enter)="guardarStock(item.id_producto)" (keyup.escape)="cancelarEdicion()" autofocus>
-                    <button class="btn btn-sm btn-success rounded-pill px-2" (click)="guardarStock(item.id_producto)" title="Guardar">
+                    <button class="btn-action success" (click)="guardarStock(item.id_producto)" title="Guardar stock">
                       <i class="bi bi-check-lg"></i>
                     </button>
-                    <button class="btn btn-sm btn-outline-secondary rounded-pill px-2" (click)="cancelarEdicion()" title="Cancelar">
+                    <button class="btn-action" (click)="cancelarEdicion()" title="Cancelar">
                       <i class="bi bi-x-lg"></i>
                     </button>
                   </div>
                 } @else {
-                  <!-- Modo lectura: muestra el stock actual -->
-                  <span class="badge rounded-pill px-3 py-2 fw-semibold small {{ getBadgeStock(item.stock) }}">
-                    <i class="bi bi-box-seam me-1"></i> {{ item.stock || 0 }} unidades
+                  <div class="d-flex align-items-center gap-2">
+                    <span class="fw-bold fw-mono text-dark" style="min-width: 65px;">{{ item.stock || 0 }} und.</span>
+                    <div class="progress rounded-pill bg-light flex-grow-1" style="height: 6px; max-width: 110px;">
+                      <div class="progress-bar rounded-pill" role="progressbar"
+                        [style.width.%]="item.stock > 0 ? (item.stock > 10 ? 100 : (item.stock * 10)) : 0"
+                        [ngClass]="{'bg-success': item.stock > 5, 'bg-warning': item.stock <= 5 && item.stock > 0, 'bg-danger': !item.stock || item.stock <= 0}">
+                      </div>
+                    </div>
+                  </div>
+                }
+              </td>
+              <td>
+                @if (item.stock > 5) {
+                  <span class="status-badge status-entregado">
+                    <span class="dot-status"></span> Abastecido
+                  </span>
+                } @else if (item.stock > 0) {
+                  <span class="status-badge status-pendiente">
+                    <span class="dot-status"></span> Stock Crítico
+                  </span>
+                } @else {
+                  <span class="status-badge status-cancelado">
+                    <span class="dot-status"></span> Agotado
                   </span>
                 }
               </td>
               <td class="text-center pe-4">
                 @if (editandoId !== item.id_producto) {
-                  <button class="btn-action shadow-sm" (click)="iniciarEdicion(item)" title="Editar stock">
-                    <i class="bi bi-pencil-square"></i>
-                  </button>
+                  <div class="d-inline-flex align-items-center gap-1">
+                    <button class="btn-action" (click)="ajustarStockRapido(item, -1)" [disabled]="(item.stock || 0) <= 0" title="Restar 1 unidad (-1)">
+                      <i class="bi bi-dash-lg"></i>
+                    </button>
+                    <button class="btn-action success" (click)="ajustarStockRapido(item, 1)" title="Sumar 1 unidad (+1)">
+                      <i class="bi bi-plus-lg"></i>
+                    </button>
+                    <button class="btn-action info ms-1" (click)="iniciarEdicion(item)" title="Ingresar cantidad exacta">
+                      <i class="bi bi-pencil-square"></i>
+                    </button>
+                  </div>
                 }
               </td>
             </tr>
             } @empty {
             <tr>
-              <td colspan="4">
-                <div class="app-loading-state py-5 text-center bg-white">
-                  <i class="bi bi-box-seam text-muted opacity-50 mb-2" style="font-size: 2.5rem;"></i>
-                  <h6 class="mb-1 text-dark fw-bold fs-5">Sin productos en inventario</h6>
-                  <p class="text-secondary small mb-0">No se encontraron productos para mostrar.</p>
+              <td colspan="5">
+                <div class="app-empty-state">
+                  <i class="bi bi-boxes"></i>
+                  <h6 class="mb-1 text-dark fw-bold">Sin registros en este filtro</h6>
+                  <p class="small mb-0">No se encontraron productos con el nivel de stock seleccionado.</p>
                 </div>
               </td>
             </tr>

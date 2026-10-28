@@ -1,101 +1,135 @@
 <!-- sidebar menu -->
 
-<aside class="sidebar sidebar-custom bg-dark text-white d-flex flex-column" [class.open]="sidebar.isOpen()">
+<aside class="sidebar sidebar-custom d-flex flex-column" [class.open]="sidebar.isOpen()">
 
-  <!-- logo -->
-  <div class="p-4 border-bottom border-secondary border-opacity-25">
+  <!-- logo y rol -->
+  <div class="p-3 px-4 border-bottom sidebar-header-border">
     <div class="d-flex align-items-center gap-3">
-      <span class="d-flex align-items-center justify-content-center rounded-3 bg-white text-warning shadow-sm"
+      <span class="d-flex align-items-center justify-content-center rounded-3 bg-white text-danger shadow-sm"
         style="width: 40px; height: 40px; flex-shrink: 0;">
-        <i class="bi bi-shop fs-5"></i>
+        <i class="bi bi-fire fs-5 text-danger"></i>
       </span>
-      <div>
-        <div class="fw-bold fs-5 text-white">Restaurante</div>
-        <small class="text-warning text-uppercase fw-bold" style="font-size: 0.7rem;">Panel Administrativo</small>
+      <div class="overflow-hidden">
+        <div class="fw-bold fs-6 text-white text-truncate" style="letter-spacing: -0.01em;">{{ nombreRestaurante }}</div>
+        <span class="badge rounded-pill fw-bold text-uppercase mt-1"
+          style="font-size: 0.65rem; letter-spacing: 0.04em; background: rgba(0, 0, 0, 0.25); color: #fef08a; border: 1px solid rgba(254, 240, 138, 0.3);">
+          <i class="bi bi-shield-check me-1"></i>{{ rolActual }}
+        </span>
       </div>
     </div>
   </div>
 
-  <!-- menu -->
+  <!-- menu organizado en 3 bloques limpios segun permisos del rol -->
   <nav class="nav nav-pills flex-column gap-1 p-3 flex-grow-1">
 
-    <span class="small text-uppercase text-white fw-bold px-2 mb-1 mt-2" style="font-size: 0.75rem;">Operaciones</span>
+    <!-- BLOQUE 1: ATENCIÓN & PEDIDOS -->
+    @if (tieneSeccionAtencion) {
+      <span class="sidebar-section-label mt-1">Atención & Pedidos</span>
+    }
 
-    <a class="nav-link d-flex align-items-center gap-2.5 px-3 py-2 rounded-3 sidebar-item"
-      routerLink="/dashboard" routerLinkActive="active-brand text-white fw-semibold"
-      [routerLinkActiveOptions]="{ exact: true }" (click)="close()">
-      <i class="bi bi-speedometer2 fs-5 me-2"></i> Dashboard
-    </a>
+    @if (puedeVer('dashboard')) {
+      <a class="nav-link d-flex align-items-center gap-2 px-3 py-2 rounded-3 sidebar-item"
+        routerLink="/dashboard" routerLinkActive="active-brand fw-semibold"
+        [routerLinkActiveOptions]="{ exact: true }" (click)="close()">
+        <i class="bi bi-grid-1x2-fill fs-6 me-2"></i> Dashboard
+      </a>
+    }
 
-    <a class="nav-link d-flex align-items-center gap-2.5 px-3 py-2 rounded-3 sidebar-item"
-      routerLink="/pedidos" routerLinkActive="active-brand text-white fw-semibold" (click)="close()">
-      <i class="bi bi-receipt fs-5 me-2"></i> Pedidos
-    </a>
+    @if (puedeVer('pedidos')) {
+      <a class="nav-link d-flex align-items-center gap-2 px-3 py-2 rounded-3 sidebar-item"
+        routerLink="/pedidos" routerLinkActive="active-brand fw-semibold" (click)="close()">
+        <i class="bi bi-receipt-cutoff fs-6 me-2"></i> Pedidos & Comandas
+      </a>
+    }
 
-    <a class="nav-link d-flex align-items-center gap-2.5 px-3 py-2 rounded-3 sidebar-item"
-      routerLink="/clientes" routerLinkActive="active-brand text-white fw-semibold" (click)="close()">
-      <i class="bi bi-people fs-5 me-2"></i> Clientes
-    </a>
+    @if (puedeVer('domiciliario')) {
+      <a class="nav-link d-flex align-items-center gap-2 px-3 py-2 rounded-3 sidebar-item"
+        routerLink="/domiciliario" routerLinkActive="active-brand fw-semibold" (click)="close()">
+        <i class="bi bi-bicycle fs-6 me-2"></i> Reparto & Domicilios
+      </a>
+    }
 
-    <span class="small text-uppercase text-white fw-bold px-2 mb-1 mt-4" style="font-size: 0.75rem;">Catalogo</span>
+    @if (puedeVer('clientes')) {
+      <a class="nav-link d-flex align-items-center gap-2 px-3 py-2 rounded-3 sidebar-item"
+        routerLink="/clientes" routerLinkActive="active-brand fw-semibold" (click)="close()">
+        <i class="bi bi-people-fill fs-6 me-2"></i> Clientes
+      </a>
+    }
 
-    <a class="nav-link d-flex align-items-center gap-2.5 px-3 py-2 rounded-3 sidebar-item"
-      routerLink="/productos" routerLinkActive="active-brand text-white fw-semibold" (click)="close()">
-      <i class="bi bi-box-seam fs-5 me-2"></i> Productos
-    </a>
+    <!-- BLOQUE 2: CATÁLOGO & ALMACÉN -->
+    @if (tieneSeccionCatalogo) {
+      <span class="sidebar-section-label mt-3">Catálogo & Almacén</span>
+    }
 
-    <a class="nav-link d-flex align-items-center gap-2.5 px-3 py-2 rounded-3 sidebar-item"
-      routerLink="/categorias" routerLinkActive="active-brand text-white fw-semibold" (click)="close()">
-      <i class="bi bi-grid-fill fs-5 me-2"></i> Categorias
-    </a>
+    @if (puedeVer('productos')) {
+      <a class="nav-link d-flex align-items-center gap-2 px-3 py-2 rounded-3 sidebar-item"
+        routerLink="/productos" routerLinkActive="active-brand fw-semibold" (click)="close()">
+        <i class="bi bi-box-seam-fill fs-6 me-2"></i> Menú de Productos
+      </a>
+    }
 
-    <a class="nav-link d-flex align-items-center gap-2.5 px-3 py-2 rounded-3 sidebar-item"
-      routerLink="/proveedores" routerLinkActive="active-brand text-white fw-semibold" (click)="close()">
-      <i class="bi bi-truck fs-5 me-2"></i> Proveedores
-    </a>
+    @if (puedeVer('inventario')) {
+      <a class="nav-link d-flex align-items-center gap-2 px-3 py-2 rounded-3 sidebar-item"
+        routerLink="/inventario" routerLinkActive="active-brand fw-semibold" (click)="close()">
+        <i class="bi bi-boxes fs-6 me-2"></i> Control de Stock
+      </a>
+    }
 
-    <a class="nav-link d-flex align-items-center gap-2.5 px-3 py-2 rounded-3 sidebar-item"
-      routerLink="/inventario" routerLinkActive="active-brand text-white fw-semibold" (click)="close()">
-      <i class="bi bi-clipboard-data fs-5 me-2"></i> Inventario
-    </a>
+    @if (puedeVer('categorias')) {
+      <a class="nav-link d-flex align-items-center gap-2 px-3 py-2 rounded-3 sidebar-item"
+        routerLink="/categorias" routerLinkActive="active-brand fw-semibold" (click)="close()">
+        <i class="bi bi-tags-fill fs-6 me-2"></i> Categorías
+      </a>
+    }
 
-    <span class="small text-uppercase text-white fw-bold px-2 mb-1 mt-4" style="font-size: 0.75rem;">Operaciones</span>
+    @if (puedeVer('proveedores')) {
+      <a class="nav-link d-flex align-items-center gap-2 px-3 py-2 rounded-3 sidebar-item"
+        routerLink="/proveedores" routerLinkActive="active-brand fw-semibold" (click)="close()">
+        <i class="bi bi-truck fs-6 me-2"></i> Proveedores
+      </a>
+    }
 
-    <a class="nav-link d-flex align-items-center gap-2.5 px-3 py-2 rounded-3 sidebar-item"
-      routerLink="/ventas" routerLinkActive="active-brand text-white fw-semibold" (click)="close()">
-      <i class="bi bi-graph-up-arrow fs-5 me-2"></i> Ventas
-    </a>
+    <!-- BLOQUE 3: ADMINISTRACIÓN & REPORTES -->
+    @if (tieneSeccionAdministracion) {
+      <span class="sidebar-section-label mt-3">Administración & Caja</span>
+    }
 
-    <a class="nav-link d-flex align-items-center gap-2.5 px-3 py-2 rounded-3 sidebar-item"
-      routerLink="/domiciliario" routerLinkActive="active-brand text-white fw-semibold" (click)="close()">
-      <i class="bi bi-compass fs-5 me-2"></i> Reparto
-    </a>
+    @if (puedeVer('ventas')) {
+      <a class="nav-link d-flex align-items-center gap-2 px-3 py-2 rounded-3 sidebar-item"
+        routerLink="/ventas" routerLinkActive="active-brand fw-semibold" (click)="close()">
+        <i class="bi bi-graph-up-arrow fs-6 me-2"></i> Historial de Ventas
+      </a>
+    }
 
-    <a class="nav-link d-flex align-items-center gap-2.5 px-3 py-2 rounded-3 sidebar-item"
-      routerLink="/pagos" routerLinkActive="active-brand text-white fw-semibold" (click)="close()">
-      <i class="bi bi-wallet2 fs-5 me-2"></i> Pagos
-    </a>
+    @if (puedeVer('pagos')) {
+      <a class="nav-link d-flex align-items-center gap-2 px-3 py-2 rounded-3 sidebar-item"
+        routerLink="/pagos" routerLinkActive="active-brand fw-semibold" (click)="close()">
+        <i class="bi bi-wallet2 fs-6 me-2"></i> Caja & Pagos
+      </a>
+    }
 
-    <span class="small text-uppercase text-white fw-bold px-2 mb-1 mt-4" style="font-size: 0.75rem;">Sistema</span>
+    @if (puedeVer('usuarios')) {
+      <a class="nav-link d-flex align-items-center gap-2 px-3 py-2 rounded-3 sidebar-item"
+        routerLink="/usuarios" routerLinkActive="active-brand fw-semibold" (click)="close()">
+        <i class="bi bi-person-badge-fill fs-6 me-2"></i> Usuarios & Roles
+      </a>
+    }
 
-    <a class="nav-link d-flex align-items-center gap-2.5 px-3 py-2 rounded-3 sidebar-item"
-      routerLink="/usuarios" routerLinkActive="active-brand text-white fw-semibold" (click)="close()">
-      <i class="bi bi-person-badge-fill fs-5 me-2"></i> Usuarios
-    </a>
-
-    <a class="nav-link d-flex align-items-center gap-2.5 px-3 py-2 rounded-3 sidebar-item"
-      routerLink="/ajustes" routerLinkActive="active-brand text-white fw-semibold" (click)="close()">
-      <i class="bi bi-gear-fill fs-5 me-2"></i> Ajustes
-    </a>
+    @if (puedeVer('ajustes')) {
+      <a class="nav-link d-flex align-items-center gap-2 px-3 py-2 rounded-3 sidebar-item"
+        routerLink="/ajustes" routerLinkActive="active-brand fw-semibold" (click)="close()">
+        <i class="bi bi-sliders fs-6 me-2"></i> Ajustes
+      </a>
+    }
   </nav>
 
   <!-- cerrar sesion -->
-  <div class="p-3 border-top border-secondary border-opacity-25">
+  <div class="p-3 border-top sidebar-header-border">
     <button type="button"
-      class="btn btn-link nav-link d-flex align-items-center gap-2.5 w-100 px-3 py-2 rounded-3 text-start"
-      style="background-color: white;" (click)="logout()">
-      <i class="bi bi-box-arrow-left fs-5 text-brand me-2"></i>
-      <span class="fw-medium text-brand">Cerrar Sesion</span>
+      class="btn btn-logout-sidebar d-flex align-items-center justify-content-center gap-2 w-100 px-3 py-2 rounded-3 shadow-sm"
+      (click)="logout()">
+      <i class="bi bi-box-arrow-left fs-6"></i>
+      <span class="fw-semibold">Cerrar Sesión</span>
     </button>
   </div>
 </aside>

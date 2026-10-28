@@ -2,6 +2,7 @@ import { Component, OnInit, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProveedorService } from '../../services/proveedor.service';
+import { ReporteService } from '../../services/reporte.service';
 
 @Component({
   selector: 'app-proveedor',
@@ -12,6 +13,7 @@ import { ProveedorService } from '../../services/proveedor.service';
 })
 export class ProveedorComponent implements OnInit {
   private proveedorService = inject(ProveedorService);
+  private reporteService = inject(ReporteService);
   private cdr = inject(ChangeDetectorRef);
 
   public listaProveedores: any[] = [];
@@ -131,5 +133,36 @@ export class ProveedorComponent implements OnInit {
       next: () => this.cargarProveedores(),
       error: (err) => console.error('Error al eliminar proveedor:', err)
     });
+  }
+
+  descargarExcel(): void {
+    const encabezados = ['ID', 'Proveedor', 'Contacto', 'Telefono', 'Correo', 'Ciudad'];
+    const filas = this.proveedoresFiltrados.map(p => [
+      p.id_proveedor || '',
+      p.nombre || '',
+      p.contacto || '---',
+      p.telefono || '---',
+      p.correo || '---',
+      p.ciudad || 'No definida'
+    ]);
+    this.reporteService.exportarExcelCSV('Reporte_Proveedores', encabezados, filas);
+  }
+
+  descargarPDF(): void {
+    const encabezados = ['Proveedor', 'Persona de Contacto', 'Teléfono', 'Correo Electrónico', 'Ciudad'];
+    const filas = this.proveedoresFiltrados.map(p => [
+      p.nombre || '',
+      p.contacto || '---',
+      p.telefono || '---',
+      p.correo || '---',
+      p.ciudad || 'No definida'
+    ]);
+    this.reporteService.exportarPDF(
+      'Directorio General de Proveedores',
+      'Proveedores y distribuidores activos del restaurante',
+      encabezados,
+      filas,
+      `Total de proveedores registrados en el reporte: ${this.proveedoresFiltrados.length}`
+    );
   }
 }

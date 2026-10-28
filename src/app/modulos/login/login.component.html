@@ -1,19 +1,19 @@
-<!-- Login simplificado - solo formulario de inicio de sesion -->
+<!-- Sistema de Autenticacion Corporativo: Login y Recuperacion de Contrasena -->
 
 <main class="login-shell bg-light">
   <div class="container-fluid min-vh-100">
     <div class="row min-vh-100">
 
-      <!-- Panel izquierdo decorativo -->
+      <!-- Panel izquierdo decorativo oficial -->
       <section class="col-lg-7 d-none d-lg-flex bg-dark text-white align-items-center justify-content-center p-5"
         style="background: linear-gradient(135deg, #ca620d 0%, #601212eb 100%);">
         <div class="w-100" style="max-width: 580px; z-index: 2">
           <span class="badge bg-brand-subtle text-white px-3 py-2 rounded-pill mb-3 fw-bold border border-white-subtle">
-            <i class="bi bi-shop me-1.5"></i>Restaurante OS
+            <i class="bi bi-shop me-1.5"></i>FASTFOOD OS
           </span>
           <h1 class="display-5 fw-bold mb-3 text-white">Bienvenido al Sistema</h1>
           <p class="lead mb-5 fs-6 lh-base">
-            Sistema de gestion integral para tu restaurante de comida rapida.
+            Sistema de gestión integral para tu restaurante de comida rápida.
           </p>
 
           <div class="row g-3">
@@ -26,7 +26,7 @@
                   </div>
                   <div>
                     <strong class="d-block text-black">Dashboard en Tiempo Real</strong>
-                    <div class="text-muted small">Visualiza ingresos, comandas activas y metricas.</div>
+                    <div class="text-muted small">Visualiza ingresos, comandas activas y métricas.</div>
                   </div>
                 </div>
               </div>
@@ -39,8 +39,8 @@
                     <i class="bi bi-receipt fs-4 text-danger"></i>
                   </div>
                   <div>
-                    <strong class="d-block text-black">Gestion de Pedidos</strong>
-                    <div class="text-muted small">Control total desde que ingresa la orden hasta el despacho.</div>
+                    <strong class="d-block text-black">Gestión de Pedidos y Reportes</strong>
+                    <div class="text-muted small">Control total desde que ingresa la orden hasta la descarga de reportes.</div>
                   </div>
                 </div>
               </div>
@@ -49,60 +49,161 @@
         </div>
       </section>
 
-      <!-- Formulario de login -->
+      <!-- Columna derecha interactiva -->
       <section class="col-12 col-lg-5 d-flex align-items-center justify-content-center p-4 bg-white">
-        <div class="w-100" style="max-width: 440px">
+        <div class="w-100" style="max-width: 450px">
 
+          <!-- Encabezado y Logo -->
           <div class="d-flex align-items-center gap-3 mb-4">
             <div class="d-flex align-items-center justify-content-center rounded-3 bg-brand text-white shadow-sm"
               style="width: 46px; height: 46px">
               <i class="bi bi-shop fs-4"></i>
             </div>
             <div>
-              <h2 class="h4 fw-bold mb-0 text-dark">Restaurante | Panel</h2>
-              <small class="text-muted fw-medium">Introduce tus credenciales</small>
+              <h2 class="h4 fw-bold mb-0 text-dark">FASTFOOD OS | Panel</h2>
+              <small class="text-muted fw-medium">
+                @if (modo === 'login') { Introduce tus credenciales de acceso }
+                @if (modo === 'recuperar') { Restablece tu contraseña de acceso }
+              </small>
             </div>
           </div>
 
+          <!-- Alerta de Error -->
           @if (error) {
-            <div class="alert alert-danger d-flex align-items-center border-0 rounded-4 shadow-sm p-3 mb-4" role="alert">
+            <div class="alert alert-danger d-flex align-items-center border-0 rounded-4 shadow-sm p-3 mb-3" role="alert">
               <i class="bi bi-exclamation-triangle-fill fs-4 me-3 text-danger flex-shrink-0"></i>
               <div class="d-flex flex-column">
-                <span class="fw-bold text-dark mb-0">Credenciales Incorrectas!</span>
-                <span class="small text-muted">Usuario o contrasena incorrectos.</span>
+                <span class="fw-bold text-dark mb-0">Atención</span>
+                <span class="small text-muted">{{ mensajeError || 'Verifica los datos ingresados.' }}</span>
               </div>
               <button type="button" (click)="error = false" class="btn-close ms-auto small" aria-label="Close"></button>
             </div>
           }
 
-          <div class="mb-3">
-            <label for="loginEmail" class="form-label text-secondary fw-bold small mb-1">Correo</label>
-            <div class="input-group">
-              <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-envelope"></i></span>
-              <input id="loginEmail" type="email" class="form-control form-control-custom"
-                placeholder="admin@restaurante.com" [(ngModel)]="correo" name="loginEmail" />
+          <!-- Alerta de Exito -->
+          @if (mensajeExito) {
+            <div class="alert alert-success d-flex align-items-center border-0 rounded-4 shadow-sm p-3 mb-3" role="alert">
+              <i class="bi bi-check-circle-fill fs-4 me-3 text-success flex-shrink-0"></i>
+              <div class="d-flex flex-column">
+                <span class="fw-bold text-dark mb-0">Proceso Exitoso</span>
+                <span class="small text-muted">{{ mensajeExito }}</span>
+              </div>
+              <button type="button" (click)="mensajeExito = ''" class="btn-close ms-auto small" aria-label="Close"></button>
             </div>
-          </div>
+          }
 
-          <div class="mb-4">
-            <label for="loginPassword" class="form-label text-secondary fw-bold small mb-1">Contrasena</label>
-            <div class="input-group">
-              <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-lock"></i></span>
-              <input id="loginPassword" type="password" class="form-control form-control-custom"
-                placeholder="********" [(ngModel)]="clave" name="loginPassword" />
+          <!-- ========================================== -->
+          <!-- MODO 1: INICIAR SESION (CORREO Y CLAVE) -->
+          <!-- ========================================== -->
+          @if (modo === 'login') {
+            <div class="mb-3">
+              <label for="loginEmail" class="form-label text-secondary fw-bold small mb-1">Correo Electrónico</label>
+              <div class="input-group">
+                <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-envelope"></i></span>
+                <input id="loginEmail" type="email" class="form-control form-control-custom"
+                  placeholder="usuario@restaurante.com" [(ngModel)]="correo" name="loginEmail"
+                  (keyup.enter)="onLogin()" />
+              </div>
             </div>
-          </div>
 
-          <button class="btn btn-brand w-100 rounded-pill py-2.5 fw-bold shadow-sm d-flex align-items-center justify-content-center"
-            (click)="onLogin()" [disabled]="cargando">
-            @if (!cargando) {
-              <span><i class="bi bi-box-arrow-in-right me-2"></i>Iniciar Sesion</span>
-            } @else {
-              <span><i class="bi bi-arrow-repeat spin me-2"></i>Verificando...</span>
-            }
-          </button>
+            <div class="mb-2">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <label for="loginPassword" class="form-label text-secondary fw-bold small mb-0">Contraseña</label>
+                <a class="small link-brand cursor-pointer" style="cursor: pointer;" (click)="cambiarModo('recuperar')">
+                  ¿Olvidaste tu contraseña?
+                </a>
+              </div>
+              <div class="input-group">
+                <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-lock"></i></span>
+                <input id="loginPassword" [type]="verClave ? 'text' : 'password'" class="form-control form-control-custom border-end-0"
+                  placeholder="********" [(ngModel)]="clave" name="loginPassword"
+                  (keyup.enter)="onLogin()" />
+                <button type="button" class="input-group-text bg-light text-muted border-start-0" (click)="verClave = !verClave" title="Mostrar/Ocultar contraseña">
+                  <i class="bi" [ngClass]="verClave ? 'bi-eye-slash' : 'bi-eye'"></i>
+                </button>
+              </div>
+            </div>
+
+            <button class="btn btn-brand w-100 rounded-pill py-2.5 fw-bold shadow-sm d-flex align-items-center justify-content-center mt-4"
+              (click)="onLogin()" [disabled]="cargando">
+              @if (!cargando) {
+                <span><i class="bi bi-box-arrow-in-right me-2"></i>Iniciar Sesión</span>
+              } @else {
+                <span><i class="bi bi-arrow-repeat spin me-2"></i>Verificando...</span>
+              }
+            </button>
+
+            <div class="text-center mt-4 pt-2 border-top">
+              <small class="text-muted d-block">
+                <i class="bi bi-shield-check text-success me-1"></i>Acceso exclusivo para el personal del restaurante
+              </small>
+              <small class="text-muted" style="font-size: 0.75rem;">
+                Las cuentas son gestionadas por el Administrador en el módulo de Personal.
+              </small>
+            </div>
+          }
+
+          <!-- ========================================== -->
+          <!-- MODO 2: RECUPERACION DE CONTRASENA -->
+          <!-- ========================================== -->
+          @if (modo === 'recuperar') {
+            <div class="p-3 rounded-3 bg-light border mb-3">
+              <div class="d-flex align-items-center gap-2 mb-1">
+                <i class="bi bi-shield-lock-fill text-brand fs-5"></i>
+                <span class="fw-bold text-dark small">Recuperación de Contraseña</span>
+              </div>
+              <p class="text-muted small mb-0">
+                Ingresa tu correo registrado y define tu nueva contraseña para actualizar tu acceso.
+              </p>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label text-secondary fw-bold small mb-1">Correo Electrónico Registrado</label>
+              <div class="input-group">
+                <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-envelope-check"></i></span>
+                <input type="email" class="form-control form-control-custom"
+                  placeholder="usuario@restaurante.com" [(ngModel)]="recCorreo" name="recCorreo" />
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label text-secondary fw-bold small mb-1">Nueva Contraseña</label>
+              <div class="input-group">
+                <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-key"></i></span>
+                <input type="password" class="form-control form-control-custom"
+                  placeholder="Mínimo 6 caracteres" [(ngModel)]="recNuevaClave" name="recNuevaClave" />
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label text-secondary fw-bold small mb-1">Confirmar Nueva Contraseña</label>
+              <div class="input-group">
+                <span class="input-group-text bg-light text-muted border-end-0"><i class="bi bi-check2-circle"></i></span>
+                <input type="password" class="form-control form-control-custom"
+                  placeholder="Repite la nueva contraseña" [(ngModel)]="recConfirmarClave" name="recConfirmarClave"
+                  (keyup.enter)="confirmarRecuperacion()" />
+              </div>
+            </div>
+
+            <button class="btn btn-brand w-100 rounded-pill py-2.5 fw-bold shadow-sm d-flex align-items-center justify-content-center"
+              (click)="confirmarRecuperacion()" [disabled]="cargando">
+              @if (!cargando) {
+                <span><i class="bi bi-key-fill me-2"></i>Actualizar Contraseña</span>
+              } @else {
+                <span><i class="bi bi-arrow-repeat spin me-2"></i>Actualizando...</span>
+              }
+            </button>
+
+            <div class="text-center mt-3">
+              <a class="small link-brand d-inline-flex align-items-center gap-1 cursor-pointer" style="cursor: pointer;" (click)="cambiarModo('login')">
+                <i class="bi bi-arrow-left"></i> Volver al inicio de sesión
+              </a>
+            </div>
+          }
+
         </div>
       </section>
+
     </div>
   </div>
 </main>

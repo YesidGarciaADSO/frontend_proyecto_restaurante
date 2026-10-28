@@ -2,6 +2,7 @@ import { Component, ChangeDetectorRef, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { UsuarioService } from '../../services/usuario.service';
+import { ReporteService } from '../../services/reporte.service';
 
 @Component({
   selector: 'app-usuarios',
@@ -11,12 +12,14 @@ import { UsuarioService } from '../../services/usuario.service';
 })
 export class UsuariosComponent implements OnInit {
   private usuarioService = inject(UsuarioService);
+  private reporteService = inject(ReporteService);
   private cdr = inject(ChangeDetectorRef);
 
   public listaUsuarios: any[] = [];
   public listaRoles: any[] = [];
   public cargando: boolean = true;
   public editando: boolean = false;
+  public modalAbierto: boolean = false;
   private idUsuarioEditando: number | null = null;
 
   public busqueda: string = '';
@@ -56,7 +59,14 @@ export class UsuariosComponent implements OnInit {
   cargarRoles() {
     this.usuarioService.roles().subscribe({
       next: (roles) => {
-        this.listaRoles = Array.isArray(roles) ? roles : [];
+        const lista = Array.isArray(roles) ? [...roles] : [];
+        if (!lista.some(r => String(r.nombre || '').toLowerCase() === 'mesero')) {
+          lista.push({ id_rol: 5, nombre: 'Mesero' });
+        }
+        if (!lista.some(r => String(r.nombre || '').toLowerCase().includes('bodega'))) {
+          lista.push({ id_rol: 6, nombre: 'Bodega' });
+        }
+        this.listaRoles = lista;
         this.cdr.detectChanges();
       },
       error: (err) => console.error('Error cargando roles:', err)
@@ -108,6 +118,16 @@ export class UsuariosComponent implements OnInit {
       telefono: u.telefono || '',
       fo_rol: u.fo_rol
     };
+    this.modalAbierto = true;
+  }
+
+  abrirModalNuevo() {
+    this.limpiarFormulario();
+    this.modalAbierto = true;
+  }
+
+  cerrarModal() {
+    this.modalAbierto = false;
   }
 
   guardarUsuario() {
@@ -117,6 +137,7 @@ export class UsuariosComponent implements OnInit {
           if (res.resultado === 'OK') {
             this.cargarDatos();
             this.limpiarFormulario();
+            this.modalAbierto = false;
           }
         },
         error: (err) => console.error('Error al guardar:', err)
@@ -127,6 +148,7 @@ export class UsuariosComponent implements OnInit {
           if (res.resultado === 'OK') {
             this.cargarDatos();
             this.limpiarFormulario();
+            this.modalAbierto = false;
           }
         },
         error: (err) => console.error('Error al guardar:', err)
@@ -146,5 +168,38 @@ export class UsuariosComponent implements OnInit {
     this.editando = false;
     this.idUsuarioEditando = null;
     this.usuarioForm = { nombre: '', apellido: '', correo: '', password: '', telefono: '', fo_rol: '' };
+  }
+
+  descargarExcel(): void {
+    const encabezados = ['ID Empleado', 'Nombre Completo', 'Correo Electronico', 'Telefono', 'Rol Asignado', 'Estado'];
+    const filas = this.usuariosFiltrados.map(u => [
+      `#USR-${u.id_usuario}`,
+      `${u.nombre || ''} ${u.apellido || ''}`.trim(),
+      u.correo || '',
+      u.telefono || '---',
+      u.nombre_rol || 'Empleado',
+      u.activo == 1 ? 'Activo' : 'Inactivo'
+    ]);
+    this.reporteService.exportarExcelCSV('Reporte_Usuarios_y_Roles', encabezados, filas);
+  }
+
+  descargarPDF(): void {
+    const encabezados = ['ID', 'Empleado', 'Correo Electrónico', 'Teléfono', 'Rol Asignado', 'Estado'];
+    const activos = this.usuariosFiltrados.filter(u => u.activo == 1).length;
+    const filas = this.usuariosFiltrados.map(u => [
+      `#USR-${u.id_usuario}`,
+      `${u.nombre || ''} ${u.apellido || ''}`.trim(),
+      u.correo || '',
+      u.telefono || '---',
+      u.nombre_rol || 'Empleado',
+      u.activo == 1 ? 'Activo' : 'Inactivo'
+    ]);
+    this.reporteService.exportarPDF(
+      'Reporte de Usuarios y Roles del Sistema',
+      'Nómina de personal registrado, credenciales y niveles de acceso',
+      encabezados,
+      filas,
+      `Total personal listado: ${this.usuariosFiltrados.length} | Usuarios activos: ${activos}`
+    );
   }
 }
